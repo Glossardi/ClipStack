@@ -57,12 +57,13 @@
   }
 </script>
 
-<div
+<button
   class="clip-item"
   class:hovering={isHovering}
   on:click={handleCopy}
   on:mouseenter={() => isHovering = true}
   on:mouseleave={() => isHovering = false}
+  aria-label={`Copy clipboard item: ${item.content.substring(0, 50)}`}
 >
   <div class="icon">{getIcon(item.content_type)}</div>
 
@@ -78,7 +79,7 @@
   {#if showCheckmark}
     <div class="checkmark" transition:fade={{duration: 150}}>✓</div>
   {/if}
-</div>
+</button>
 
 <style>
   .clip-item {
@@ -89,6 +90,12 @@
     cursor: pointer;
     transition: background-color 0.15s ease;
     position: relative;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+    font-size: inherit;
   }
 
   .clip-item:hovering {

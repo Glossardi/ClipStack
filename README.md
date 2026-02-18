@@ -128,7 +128,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - ✅ Basic clipboard history
 - ✅ Search functionality
 - ✅ Settings panel
-- ✅ Menu bar integration
+- ✅ Menu bar integration (menu bar only, no Dock icon)
 
 ### Phase 2 (Planned)
 - 🔲 Image support
@@ -137,6 +137,20 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - 🔲 Keyboard shortcuts (⌘⇧V)
 - 🔲 Launch at login
 - 🔲 Dark mode toggle
+
+## ❓ Troubleshooting
+
+### App appears in Dock
+If the app shows a Dock icon, ensure you're running v1.0.1 or later. The app uses macOS `Accessory` activation policy to remain menu bar-only.
+
+### Window doesn't appear on click
+- Click the menu bar icon (top-right)
+- The window should appear below the icon
+- If not, try quitting the app (via menu bar icon → Quit ClipStack) and relaunching
+
+### Build warnings
+- **Bundle ID warning**: Fixed in v1.0.1 (changed from `com.clipstack.app` to `com.clipstack.macos`)
+- **Shell plugin warning**: Fixed in v1.0.1 (updated to Tauri V2 `open` config)
 
 ---
 

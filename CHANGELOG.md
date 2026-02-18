@@ -17,87 +17,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Launch at login via SMAppService
 - Dark mode toggle in settings
 
-## [1.0.0] - 2026-02-18
+## [1.0.1] - 2026-02-18
 
-### Added
-- Initial release of ClipStack clipboard manager
-- Menu bar integration with tray icon
-- Clipboard history monitoring (500ms polling interval)
-- Text and URL content type detection
-- Live search functionality
-- Click-to-copy with visual feedback (checkmark animation)
-- Settings panel with history limit configuration (10/25/50/100 items)
-- Swipe-to-delete and Clear All functionality
-- Empty state with helpful messaging
-- Responsive UI with backdrop blur effect
-- Rust backend using `arboard` crate for clipboard access
-- Svelte 5 frontend with TypeScript
-- Tauri V2 framework integration
+### Fixed
+- **Menu bar only mode** - Set macOS activation policy to `Accessory` so app doesn't appear in Dock
+- **Window visibility on launch** - Added explicit `window.show()` and `window.set_focus()` calls in setup
+- **Bundle identifier warning** - Changed from `com.clipstack.app` to `com.clipstack.macos` to avoid macOS bundle extension conflict
+- **Window control permissions** - Added `core:window:allow-show`, `core:window:allow-set-focus`, `core:window:allow-close` to capabilities
+- **Shell plugin configuration** - Updated from deprecated `allowlist` to `open` for Tauri V2 compatibility
+- **Accessibility** - Changed clipboard items from `<div>` to `<button>` elements with proper `aria-label` attributes
+
+### Changed
+- **Dependencies** - Added `cocoa` and `objc` crates for macOS native API access (activation policy)
+- **README** - Updated with menu bar behavior documentation and troubleshooting section
 
 ### Technical Details
-- **Frontend:** Svelte 5.0 + TypeScript + Vite
-- **Backend:** Rust 2021 edition
-- **Framework:** Tauri V2.0
-- **Clipboard Library:** arboard 3.x
-- **UUID Generation:** uuid 1.x with v4 feature
-- **Minimum macOS:** 14.0 (Sonoma)
-- **App Bundle:** Native macOS .app with DMG distribution
-
-### Project Structure
-```
-ClipStack/
-├── src/routes/           # Svelte components
-│   ├── +page.svelte      # Main app component
-│   ├── ClipItemRow.svelte
-│   ├── SearchBar.svelte
-│   └── Settings.svelte
-├── src-tauri/
-│   ├── src/
-│   │   ├── lib.rs        # Tauri commands + clipboard logic
-│   │   └── main.rs       # Application entry point
-│   ├── Cargo.toml        # Rust dependencies
-│   └── tauri.conf.json   # Tauri configuration
-├── package.json          # Node.js dependencies
-└── README.md             # Project documentation
-```
-
-### Known Issues
-- Bundle identifier ends with `.app` (generates warning, non-critical)
-- Image content type detected but not yet displayed as thumbnails
-- No persistence between app restarts (in-memory only)
-- No keyboard shortcut handler implemented yet
-- Launch at login not yet implemented
-
-### Build Commands
-```bash
-# Development
-npm install
-npm run tauri dev
-
-# Production Build
-npm run tauri build
-
-# Output locations
-# - App: src-tauri/target/release/bundle/macos/ClipStack.app
-# - DMG: src-tauri/target/release/bundle/dmg/ClipStack_1.0.0_aarch64.dmg
-```
-
-### Dependencies (Initial)
-**Node.js:**
-- @tauri-apps/api: ^2
-- @tauri-apps/cli: ^2
-- @tauri-apps/plugin-opener: ^2
-- svelte: ^5.0.0
-- vite: ^6.0.3
-
-**Rust:**
-- tauri: 2 (features: tray-icon, image-png)
-- tauri-plugin-opener: 2
-- tauri-plugin-shell: 2
-- arboard: 3
-- uuid: 1 (features: v4)
-- serde: 1 (features: derive)
-- serde_json: 1
+- macOS activation policy set via `NSApplication::setActivationPolicy_(NSApplicationActivationPolicyAccessory)`
+- Uses `cocoa::appkit` and `cocoa::base` for native macOS integration
+- Window shown automatically on first launch and when tray icon is clicked
 
 ---
 
@@ -105,6 +42,7 @@ npm run tauri build
 
 | Version | Date | Status |
 |---------|------|--------|
+| 1.0.1 | 2026-02-18 | ✅ Released |
 | 1.0.0 | 2026-02-18 | ✅ Released |
 
 ---

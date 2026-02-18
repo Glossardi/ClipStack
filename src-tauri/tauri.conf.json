@@ -2,7 +2,7 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "ClipStack",
   "version": "1.0.0",
-  "identifier": "com.clipstack.app",
+  "identifier": "com.clipstack.macos",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -54,9 +54,7 @@
   },
   "plugins": {
     "shell": {
-      "allowlist": {
-        "all": false
-      }
+      "open": true
     }
   }
 }

@@ -8,6 +8,11 @@ use tauri::{
     Manager, State,
 };
 
+#[cfg(target_os = "macos")]
+use cocoa::appkit::{NSApplication, NSApplicationActivationPolicyAccessory};
+#[cfg(target_os = "macos")]
+use cocoa::base::{id, nil};
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClipItem {
     pub id: String,
@@ -123,6 +128,15 @@ pub fn run() {
             get_from_clipboard
         ])
         .setup(|app| {
+            // Set macOS activation policy to accessory (menu bar only, no dock icon)
+            #[cfg(target_os = "macos")]
+            {
+                unsafe {
+                    let ns_app: id = cocoa::appkit::NSApplication::sharedApplication(nil);
+                    ns_app.setActivationPolicy_(NSApplicationActivationPolicyAccessory);
+                }
+            }
+
             let quit = MenuItem::with_id(app, "quit", "Quit ClipStack", true, None::<&str>)?;
             let settings = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
 
@@ -158,6 +172,12 @@ pub fn run() {
                     }
                 })
                 .build(app)?;
+
+            // Show window on first launch
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
 
             Ok(())
         })
