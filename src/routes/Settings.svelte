@@ -4,23 +4,27 @@
   export let historyLimit = 50;
 
   const dispatch = createEventDispatcher<{
-    setLimit: number;
-    close: void;
+    setLimit: CustomEvent<number>;
+    close: CustomEvent<void>;
   }>();
 
   const limits = [10, 25, 50, 100];
-  const version = '1.0.0';
+  const version = '1.0.1';
 
   function handleLimitChange(newLimit: number) {
     historyLimit = newLimit;
-    dispatch('setLimit', newLimit);
+    dispatch('setLimit', { detail: newLimit });
+  }
+
+  function handleClose() {
+    dispatch('close', { detail: undefined });
   }
 </script>
 
 <div class="settings-container">
   <div class="settings-header">
     <h2>Settings</h2>
-    <button class="close-btn" on:click={() => dispatch('close')}>✕</button>
+    <button class="close-btn" on:click={handleClose}>✕</button>
   </div>
 
   <div class="settings-content">

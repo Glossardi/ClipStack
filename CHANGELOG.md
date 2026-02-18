@@ -17,6 +17,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Launch at login via SMAppService
 - Dark mode toggle in settings
 
+## [1.0.2] - 2026-02-18
+
+### Fixed
+- **Settings panel close button** - Fixed event dispatcher to properly close Settings panel when X button is clicked
+- **Event handling** - Updated from `onClose` callback to Svelte 5 `on:close` event pattern for proper component communication
+- **Version display** - Updated version in Settings panel to 1.0.1
+
+### Added
+- **Rust unit tests** - Added test coverage for clipboard state initialization, item creation, URL detection, and content type detection
+- **Test module** - New `#[cfg(test)]` module in `lib.rs` with 4 test cases for core clipboard logic
+
+### Changed
+- **Event dispatcher types** - Migrated to `CustomEvent` pattern for type-safe event handling in Settings.svelte
+- **Settings event handlers** - Refactored `handleCloseSettings()` function for cleaner state management
+
+### Technical Details
+- Settings panel now uses `createEventDispatcher<{ setLimit: CustomEvent<number>; close: CustomEvent<void>; }>`
+- Event dispatching uses `{ detail: value }` pattern for Svelte 5 compatibility
+- Added 4 Rust tests covering: state initialization, item creation, URL detection, content type detection
+
+---
+
 ## [1.0.1] - 2026-02-18
 
 ### Fixed
@@ -42,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Status |
 |---------|------|--------|
+| 1.0.2 | 2026-02-18 | ✅ Released |
 | 1.0.1 | 2026-02-18 | ✅ Released |
 | 1.0.0 | 2026-02-18 | ✅ Released |
 

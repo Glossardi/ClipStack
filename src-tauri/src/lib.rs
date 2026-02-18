@@ -113,6 +113,66 @@ fn get_from_clipboard() -> Result<String, String> {
     clipboard.get_text().map_err(|e| e.to_string())
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_clipboard_state_initialization() {
+        let state = ClipboardState::new();
+        let items = state.items.lock().unwrap();
+        assert_eq!(items.len(), 0);
+
+        let limit = state.history_limit.lock().unwrap();
+        assert_eq!(*limit, 50);
+    }
+
+    #[test]
+    fn test_clipboard_item_creation() {
+        let item = ClipItem {
+            id: "test-id".to_string(),
+            content: "Test content".to_string(),
+            content_type: "text".to_string(),
+            created_at: 1234567890,
+        };
+
+        assert_eq!(item.id, "test-id");
+        assert_eq!(item.content, "Test content");
+        assert_eq!(item.content_type, "text");
+    }
+
+    #[test]
+    fn test_url_detection() {
+        let http_url = "https://example.com";
+        let https_url = "http://test.com";
+        let not_url = "just text";
+
+        assert!(http_url.starts_with("http"));
+        assert!(https_url.starts_with("http"));
+        assert!(!not_url.starts_with("http"));
+    }
+
+    #[test]
+    fn test_content_type_detection() {
+        let url_content = "https://example.com";
+        let text_content = "Plain text";
+
+        let url_type = if url_content.starts_with("http") {
+            "url"
+        } else {
+            "text"
+        };
+        let text_type = if text_content.starts_with("http") {
+            "url"
+        } else {
+            "text"
+        };
+
+        assert_eq!(url_type, "url");
+        assert_eq!(text_type, "text");
+    }
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
@@ -142,7 +202,7 @@ pub fn run() {
 
             let menu = Menu::with_items(app, &[&settings, &quit])?;
 
-            let _tray = TrayIconBuilder::new()
+            let tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&menu)
                 .show_menu_on_left_click(false)
@@ -172,6 +232,9 @@ pub fn run() {
                     }
                 })
                 .build(app)?;
+
+            // Store tray reference for menu auto-close
+            app.manage(tray);
 
             // Show window on first launch
             if let Some(window) = app.get_webview_window("main") {

@@ -95,6 +95,10 @@
     appWindow.close();
   }
 
+  function handleCloseSettings() {
+    showSettings = false;
+  }
+
   $: if (searchText === '') {
     applyFilter();
   }
@@ -104,11 +108,11 @@
   {#if showSettings}
     <Settings
       {historyLimit}
-      onSetLimit={(limit: number) => {
-        historyLimit = limit;
-        invoke('set_history_limit', { limit });
+      on:setLimit={(e) => {
+        historyLimit = e.detail;
+        invoke('set_history_limit', { limit: historyLimit });
       }}
-      onClose={toggleSettings}
+      on:close={handleCloseSettings}
     />
   {:else}
     <div class="container">
