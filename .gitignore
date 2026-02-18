@@ -1,0 +1,33 @@
+# Tauri
+src-tauri/target
+src-tauri/dist
+src-tauri/icons/generated
+
+# SvelteKit
+.svelte-kit
+.build
+
+# Node
+node_modules/
+npm-debug.log
+
+# Rust
+*.rs.bk
+Cargo.lock
+
+# Build
+dist/
+build/
+
+# macOS
+.DS_Store
+*.dmg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Cache
+tmp-npm-cache/

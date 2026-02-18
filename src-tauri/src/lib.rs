@@ -1,0 +1,166 @@
+use arboard::Clipboard;
+use serde::{Deserialize, Serialize};
+use std::sync::Mutex;
+use std::time::{SystemTime, UNIX_EPOCH};
+use tauri::{
+    menu::{Menu, MenuItem},
+    tray::{MouseButton, TrayIconBuilder, TrayIconEvent},
+    Manager, State,
+};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClipItem {
+    pub id: String,
+    pub content: String,
+    pub content_type: String,
+    pub created_at: u64,
+}
+
+#[derive(Default)]
+struct ClipboardState {
+    items: Mutex<Vec<ClipItem>>,
+    history_limit: Mutex<usize>,
+}
+
+impl ClipboardState {
+    fn new() -> Self {
+        Self {
+            items: Mutex::new(Vec::new()),
+            history_limit: Mutex::new(50),
+        }
+    }
+}
+
+#[tauri::command]
+fn get_clipboard_items(state: State<ClipboardState>) -> Vec<ClipItem> {
+    state.items.lock().unwrap().clone()
+}
+
+#[tauri::command]
+fn copy_to_clipboard(content: String) -> Result<(), String> {
+    let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
+    clipboard.set_text(content).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+fn add_clipboard_item(content: String, state: State<ClipboardState>) -> Result<ClipItem, String> {
+    let item = ClipItem {
+        id: uuid::Uuid::new_v4().to_string(),
+        content_type: if content.starts_with("http") {
+            "url".to_string()
+        } else {
+            "text".to_string()
+        },
+        content: content.clone(),
+        created_at: SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u64,
+    };
+
+    let mut items = state.items.lock().unwrap();
+
+    // Check for duplicates
+    if items.iter().any(|i| i.content == content) {
+        return Ok(item);
+    }
+
+    items.insert(0, item.clone());
+
+    // Enforce limit
+    let limit = *state.history_limit.lock().unwrap();
+    while items.len() > limit {
+        items.pop();
+    }
+
+    Ok(item)
+}
+
+#[tauri::command]
+fn delete_clipboard_item(id: String, state: State<ClipboardState>) -> Result<(), String> {
+    let mut items = state.items.lock().unwrap();
+    items.retain(|i| i.id != id);
+    Ok(())
+}
+
+#[tauri::command]
+fn clear_clipboard_items(state: State<ClipboardState>) -> Result<(), String> {
+    let mut items = state.items.lock().unwrap();
+    items.clear();
+    Ok(())
+}
+
+#[tauri::command]
+fn set_history_limit(limit: usize, state: State<ClipboardState>) {
+    let mut history_limit = state.history_limit.lock().unwrap();
+    *history_limit = limit;
+
+    let mut items = state.items.lock().unwrap();
+    while items.len() > limit {
+        items.pop();
+    }
+}
+
+#[tauri::command]
+fn get_from_clipboard() -> Result<String, String> {
+    let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
+    clipboard.get_text().map_err(|e| e.to_string())
+}
+
+pub fn run() {
+    tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_shell::init())
+        .manage(ClipboardState::new())
+        .invoke_handler(tauri::generate_handler![
+            get_clipboard_items,
+            copy_to_clipboard,
+            add_clipboard_item,
+            delete_clipboard_item,
+            clear_clipboard_items,
+            set_history_limit,
+            get_from_clipboard
+        ])
+        .setup(|app| {
+            let quit = MenuItem::with_id(app, "quit", "Quit ClipStack", true, None::<&str>)?;
+            let settings = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
+
+            let menu = Menu::with_items(app, &[&settings, &quit])?;
+
+            let _tray = TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .menu(&menu)
+                .show_menu_on_left_click(false)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "quit" => {
+                        app.exit(0);
+                    }
+                    "settings" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                    _ => {}
+                })
+                .on_tray_icon_event(|tray, event| {
+                    if let TrayIconEvent::Click {
+                        button: MouseButton::Left,
+                        ..
+                    } = event
+                    {
+                        let app = tray.app_handle();
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                })
+                .build(app)?;
+
+            Ok(())
+        })
+        .run(tauri::generate_context!())
+        .expect("error while running ClipStack");
+}
