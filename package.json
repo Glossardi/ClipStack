@@ -1,6 +1,6 @@
 {
   "name": "clipstack",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A minimalist macOS clipboard manager",
   "type": "module",
   "scripts": {
