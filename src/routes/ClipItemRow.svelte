@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
 
   export let item: {
@@ -11,20 +10,12 @@
   export let onCopy: () => void = () => {};
   export let onDelete: () => void = () => {};
 
-  const dispatch = createEventDispatcher<{
-    copy: void;
-    delete: void;
-  }>();
-
   let isHovering = false;
   let showCheckmark = false;
 
   function getRelativeTime(timestamp: number): string {
-    const now = Date.now();
-    const diff = now - timestamp;
-
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
+    const diff = Date.now() - timestamp;
+    const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 
@@ -34,35 +25,18 @@
     return 'Just now';
   }
 
-  function getContentTypeLabel(type: string): string {
-    return type === 'url' ? 'URL' : type.charAt(0).toUpperCase() + type.slice(1);
-  }
-
-  function getIcon(type: string): string {
-    switch (type) {
-      case 'url': return '🔗';
-      case 'image': return '🖼';
-      default: return '📄';
-    }
-  }
-
-  function truncateContent(content: string): string {
-    if (content.length <= 100) return content;
-    return content.substring(0, 100) + '...';
+  function getTypeLabel(type: string): string {
+    return type === 'url' ? 'URL' : 'Text';
   }
 
   function handleCopy() {
-    dispatch('copy');
-    onCopy();
     showCheckmark = true;
-    setTimeout(() => {
-      showCheckmark = false;
-    }, 800);
+    onCopy();
+    setTimeout(() => { showCheckmark = false; }, 600);
   }
 
   function handleDelete(e: MouseEvent) {
     e.stopPropagation();
-    dispatch('delete');
     onDelete();
   }
 </script>
@@ -77,73 +51,114 @@
   <button
     class="clip-copy"
     on:click={handleCopy}
-    aria-label={`Copy clipboard item: ${item.content.substring(0, 50)}`}
+    aria-label="Copy: {item.content.substring(0, 60)}"
   >
-    <div class="icon">{getIcon(item.content_type)}</div>
+    <div class="type-badge" class:url={item.content_type === 'url'}>
+      {item.content_type === 'url' ? 'URL' : 'A'}
+    </div>
 
     <div class="content">
-      <div class="text">{truncateContent(item.content)}</div>
+      <div class="text">{item.content}</div>
       <div class="meta">
         <span>{getRelativeTime(item.created_at)}</span>
-        <span class="separator">•</span>
-        <span>{getContentTypeLabel(item.content_type)}</span>
+        <span class="dot">·</span>
+        <span>{getTypeLabel(item.content_type)}</span>
       </div>
     </div>
   </button>
 
-  {#if showCheckmark}
-    <div class="checkmark" transition:fade={{duration: 150}}>✓</div>
-  {:else if isHovering}
-    <button
-      class="delete-btn"
-      on:click={handleDelete}
-      aria-label="Delete clipboard item"
-      transition:fade={{duration: 100}}
-    >✕</button>
-  {/if}
+  <div class="actions">
+    {#if showCheckmark}
+      <span class="checkmark" transition:fade={{ duration: 120 }}>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M3 8L6.5 11.5L13 5" stroke="#34c759" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+    {:else if isHovering}
+      <button
+        class="delete-btn"
+        on:click={handleDelete}
+        aria-label="Delete this clipboard item"
+        transition:fade={{ duration: 80 }}
+      >
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <path d="M2 2L10 10M10 2L2 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    {/if}
+  </div>
 </div>
 
 <style>
   .clip-item {
     display: flex;
     align-items: center;
-    position: relative;
-    transition: background-color 0.15s ease;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    transition: background-color 0.1s ease;
+  }
+
+  :global(html.dark) .clip-item {
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .clip-item:last-child {
+    border-bottom: none;
   }
 
   .clip-item:hover,
   .clip-item.hovering {
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(0, 0, 0, 0.04);
   }
 
-  :global(.dark) .clip-item:hover,
-  :global(.dark) .clip-item.hovering {
+  :global(html.dark) .clip-item:hover,
+  :global(html.dark) .clip-item.hovering {
     background: rgba(255, 255, 255, 0.05);
   }
 
   .clip-copy {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 10px;
-    padding: 8px 10px;
+    padding: 9px 12px;
     cursor: pointer;
     flex: 1;
     min-width: 0;
     background: none;
     border: none;
     text-align: left;
-    font-family: inherit;
-    font-size: inherit;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 
-  .icon {
-    font-size: 20px;
+  .type-badge {
     flex-shrink: 0;
-    width: 32px;
-    height: 32px;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.07);
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.45);
+    letter-spacing: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  }
+
+  .type-badge.url {
+    background: rgba(0, 122, 255, 0.1);
+    color: #007aff;
+  }
+
+  :global(html.dark) .type-badge {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  :global(html.dark) .type-badge.url {
+    background: rgba(10, 132, 255, 0.15);
+    color: #0a84ff;
   }
 
   .content {
@@ -152,64 +167,79 @@
   }
 
   .text {
-    font-size: 14px;
-    color: #1a1a1a;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.82);
     line-height: 1.4;
-    max-height: 2.8em;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    word-break: break-word;
+    word-break: break-all;
   }
 
-  :global(.dark) .text {
-    color: #e5e5e5;
+  :global(html.dark) .text {
+    color: rgba(255, 255, 255, 0.82);
   }
 
   .meta {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: #666;
-    margin-top: 4px;
+    gap: 5px;
+    font-size: 11px;
+    color: rgba(0, 0, 0, 0.35);
+    margin-top: 2px;
+    letter-spacing: 0;
   }
 
-  :global(.dark) .meta {
-    color: #999;
+  :global(html.dark) .meta {
+    color: rgba(255, 255, 255, 0.3);
   }
 
-  .separator {
-    opacity: 0.5;
+  .dot {
+    opacity: 0.6;
+  }
+
+  .actions {
+    flex-shrink: 0;
+    width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .checkmark {
-    flex-shrink: 0;
-    padding-right: 12px;
-    color: #34c759;
-    font-size: 20px;
-    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .delete-btn {
-    flex-shrink: 0;
-    padding: 4px 12px 4px 8px;
     background: none;
     border: none;
+    padding: 4px;
     cursor: pointer;
-    color: #999;
-    font-size: 14px;
+    color: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 4px;
-    transition: color 0.15s;
+    transition: color 0.12s, background-color 0.12s;
+    width: 24px;
+    height: 24px;
   }
 
   .delete-btn:hover {
     color: #ff3b30;
+    background: rgba(255, 59, 48, 0.08);
   }
 
-  :global(.dark) .delete-btn:hover {
+  :global(html.dark) .delete-btn {
+    color: rgba(255, 255, 255, 0.25);
+  }
+
+  :global(html.dark) .delete-btn:hover {
     color: #ff453a;
+    background: rgba(255, 69, 58, 0.12);
   }
 </style>

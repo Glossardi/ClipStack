@@ -5,12 +5,15 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, TrayIconBuilder, TrayIconEvent},
-    Manager, State,
+    Manager, PhysicalPosition, State,
 };
 
+// TODO(#migration): migrate to objc2-app-kit when cocoa 0.26 is fully superseded
 #[cfg(target_os = "macos")]
+#[allow(deprecated)]
 use cocoa::appkit::{NSApplication, NSApplicationActivationPolicyAccessory};
 #[cfg(target_os = "macos")]
+#[allow(deprecated)]
 use cocoa::base::{id, nil};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -66,8 +69,10 @@ fn add_clipboard_item(content: String, state: State<ClipboardState>) -> Result<C
 
     let mut items = state.items.lock().unwrap();
 
-    // Check for duplicates
-    if items.iter().any(|i| i.content == content) {
+    // Check for duplicates – move to front instead of ignoring
+    if let Some(pos) = items.iter().position(|i| i.content == content) {
+        let existing = items.remove(pos);
+        items.insert(0, existing);
         return Ok(item);
     }
 
@@ -275,9 +280,10 @@ pub fn run() {
             get_from_clipboard
         ])
         .setup(|app| {
-            // Set macOS activation policy to accessory (menu bar only, no dock icon)
+            // Set macOS activation policy: accessory = menu-bar-only, no Dock icon
             #[cfg(target_os = "macos")]
             {
+                #[allow(deprecated)]
                 unsafe {
                     let ns_app: id = cocoa::appkit::NSApplication::sharedApplication(nil);
                     ns_app.setActivationPolicy_(NSApplicationActivationPolicyAccessory);
@@ -289,7 +295,7 @@ pub fn run() {
 
             let menu = Menu::with_items(app, &[&settings, &quit])?;
 
-            let tray = TrayIconBuilder::new()
+            let _tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&menu)
                 .show_menu_on_left_click(false)
@@ -308,26 +314,29 @@ pub fn run() {
                 .on_tray_icon_event(|tray, event| {
                     if let TrayIconEvent::Click {
                         button: MouseButton::Left,
+                        position,
                         ..
                     } = event
                     {
                         let app = tray.app_handle();
                         if let Some(window) = app.get_webview_window("main") {
-                            let _ = window.show();
-                            let _ = window.set_focus();
+                            if window.is_visible().unwrap_or(false) {
+                                // Toggle: hide if already open
+                                let _ = window.hide();
+                            } else {
+                                // Position window below the tray icon, centered on click point
+                                let window_width = 380.0_f64;
+                                let x = (position.x - window_width / 2.0).max(0.0);
+                                // On macOS the menu bar is at the top; place window just below it
+                                let y = position.y + 4.0;
+                                let _ = window.set_position(PhysicalPosition::new(x as i32, y as i32));
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
                         }
                     }
                 })
                 .build(app)?;
-
-            // Store tray reference for menu auto-close
-            app.manage(tray);
-
-            // Show window on first launch
-            if let Some(window) = app.get_webview_window("main") {
-                let _ = window.show();
-                let _ = window.set_focus();
-            }
 
             Ok(())
         })

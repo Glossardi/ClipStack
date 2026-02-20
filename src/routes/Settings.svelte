@@ -4,27 +4,32 @@
   export let historyLimit = 50;
 
   const dispatch = createEventDispatcher<{
-    setLimit: CustomEvent<number>;
-    close: CustomEvent<void>;
+    setLimit: number;
+    close: void;
   }>();
 
   const limits = [10, 25, 50, 100];
-  const version = '1.0.0';
+  const version = '1.1.0';
 
-  function handleLimitChange(newLimit: number) {
+  function handleLimitChange(e: Event) {
+    const newLimit = parseInt((e.target as HTMLSelectElement).value);
     historyLimit = newLimit;
-    dispatch('setLimit', { detail: newLimit });
+    dispatch('setLimit', newLimit);
   }
 
   function handleClose() {
-    dispatch('close', { detail: undefined });
+    dispatch('close');
   }
 </script>
 
 <div class="settings-container">
   <div class="settings-header">
     <h2>Settings</h2>
-    <button class="close-btn" on:click={handleClose}>✕</button>
+    <button class="close-btn" on:click={handleClose} aria-label="Close settings">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+        <path d="M1.5 1.5L10.5 10.5M10.5 1.5L1.5 10.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </button>
   </div>
 
   <div class="settings-content">
@@ -32,12 +37,8 @@
       <h3>History</h3>
 
       <div class="setting-row">
-        <label for="history-limit">History Limit</label>
-        <select
-          id="history-limit"
-          bind:value={historyLimit}
-          on:change={(e) => handleLimitChange(parseInt((e.target as HTMLSelectElement).value))}
-        >
+        <label for="history-limit">Keep last</label>
+        <select id="history-limit" value={historyLimit} on:change={handleLimitChange}>
           {#each limits as limit}
             <option value={limit}>{limit} items</option>
           {/each}
@@ -47,20 +48,9 @@
 
     <section class="settings-section">
       <h3>About</h3>
-
       <div class="setting-row">
-        <span>Version</span>
-        <span class="value">{version}</span>
-      </div>
-
-      <div class="setting-row">
-        <a
-          href="https://github.com/clipstack/clipstack"
-          target="_blank"
-          class="link"
-        >
-          GitHub Repository →
-        </a>
+        <span>ClipStack</span>
+        <span class="value">v{version}</span>
       </div>
     </section>
   </div>
@@ -78,41 +68,55 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   }
 
-  :global(.dark) .settings-header {
-    border-bottom-color: rgba(255, 255, 255, 0.1);
+  :global(html.dark) .settings-header {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
   }
 
   .settings-header h2 {
     margin: 0;
-    font-size: 18px;
-    color: #1a1a1a;
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.85);
+    letter-spacing: -0.2px;
+    -webkit-font-smoothing: antialiased;
   }
 
-  :global(.dark) .settings-header h2 {
-    color: #e5e5e5;
+  :global(html.dark) .settings-header h2 {
+    color: rgba(255, 255, 255, 0.85);
   }
 
   .close-btn {
-    background: none;
+    background: rgba(0, 0, 0, 0.06);
     border: none;
-    font-size: 20px;
     cursor: pointer;
-    color: #666;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: background-color 0.15s;
+    color: rgba(0, 0, 0, 0.45);
+    padding: 0;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.12s;
   }
 
   .close-btn:hover {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.12);
+    color: rgba(0, 0, 0, 0.65);
   }
 
-  :global(.dark) .close-btn:hover {
+  :global(html.dark) .close-btn {
     background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  :global(html.dark) .close-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: rgba(255, 255, 255, 0.7);
   }
 
   .settings-content {
@@ -126,16 +130,17 @@
   }
 
   .settings-section h3 {
-    margin: 0 0 12px 0;
-    font-size: 14px;
+    margin: 0 0 8px 0;
+    font-size: 11px;
     font-weight: 600;
-    color: #666;
+    color: rgba(0, 0, 0, 0.38);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
+    -webkit-font-smoothing: antialiased;
   }
 
-  :global(.dark) .settings-section h3 {
-    color: #999;
+  :global(html.dark) .settings-section h3 {
+    color: rgba(255, 255, 255, 0.32);
   }
 
   .setting-row {
@@ -144,49 +149,46 @@
     align-items: center;
     padding: 10px 0;
     font-size: 14px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  :global(html.dark) .setting-row {
+    border-top-color: rgba(255, 255, 255, 0.06);
   }
 
   .setting-row label {
-    color: #1a1a1a;
+    color: rgba(0, 0, 0, 0.82);
+    -webkit-font-smoothing: antialiased;
   }
 
-  :global(.dark) .setting-row label {
-    color: #e5e5e5;
+  :global(html.dark) .setting-row label {
+    color: rgba(255, 255, 255, 0.82);
   }
 
   select {
-    padding: 6px 12px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 6px;
-    font-size: 14px;
+    padding: 5px 8px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 7px;
+    font-size: 13px;
     background: white;
     cursor: pointer;
+    color: rgba(0, 0, 0, 0.8);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 
-  :global(.dark) select {
-    background: #2a2a2a;
+  :global(html.dark) select {
+    background: rgba(255, 255, 255, 0.08);
     border-color: rgba(255, 255, 255, 0.1);
-    color: #e5e5e5;
+    color: rgba(255, 255, 255, 0.8);
   }
 
   .value {
-    color: #666;
+    color: rgba(0, 0, 0, 0.38);
+    font-size: 13px;
   }
 
-  :global(.dark) .value {
-    color: #999;
-  }
-
-  .link {
-    color: #007aff;
-    text-decoration: none;
-  }
-
-  :global(.dark) .link {
-    color: #0a84ff;
-  }
-
-  .link:hover {
-    text-decoration: underline;
+  :global(html.dark) .value {
+    color: rgba(255, 255, 255, 0.32);
   }
 </style>

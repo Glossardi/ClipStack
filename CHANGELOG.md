@@ -11,11 +11,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Planned for Next Release
 - Image support in clipboard history
-- URL detection with clickable previews
+- Persistence across app restarts (Tauri store plugin)
 - Pin/favorite items functionality
 - Global keyboard shortcut (⌘⇧V)
 - Launch at login via SMAppService
-- Dark mode toggle in settings
+
+## [1.1.0] - 2026-02-20
+
+### Changed (Breaking UX)
+- **Window toggle behavior** – Left-clicking the tray icon now toggles the window. Clicking again closes it instead of always showing it.
+- **Auto-dismiss on blur** – The popover hides automatically when focus moves to another app or window (clicking outside). No more sticky overlay.
+- **Copy & hide** – Clicking a clipboard item copies its content and immediately hides the window so the user can paste right away.
+- **Window no longer always-on-top** – Removed `alwaysOnTop: true`; the window behaves like a standard macOS menu-bar panel.
+- **Window starts hidden** – App launches silently to the menu bar; the window only appears on tray click.
+
+### Added
+- **Escape key** – Pressing Escape hides the window (or closes Settings if open).
+- **Auto-focus search** – Search field is automatically focused whenever the window opens.
+- **System dark mode** – Dark/light theme now follows `prefers-color-scheme` automatically with a `change` listener; no manual toggle needed.
+- **Pop-in animation** – Window appears with a subtle scale + fade animation (`cubic-bezier` spring easing).
+- **Tray icon position** – Window is positioned below the tray icon click point instead of appearing at a fixed position.
+
+### Fixed
+- **Transparency / backdrop blur** – Enabled `macosPrivateApi: true` in `tauri.conf.json`; the blur and vibrancy effects now render correctly (previously produced a console warning and fell back to opaque).
+- **10 deprecation warnings** – Suppressed `cocoa` FFI warnings with targeted `#[allow(deprecated)]` blocks and an inline migration comment.
+- **Duplicate handling** – Re-copying an existing item now moves it to the top of the list instead of silently ignoring it.
+
+### Removed
+- **Quit button (✕) in search bar** – Removed; dismissal is now handled by clicking outside the window.
+- **GitHub repository link in Settings** – Removed (not an open-source project).
+
+### Improved UI (Apple-style polish)
+- `main` window element: `border-radius: 14px`, refined shadow (`box-shadow` with 3 layers), `backdrop-filter: blur(40px) saturate(180%)`.
+- SearchBar: replaced emoji magnifier with inline SVG icon; bare `<input>` without wrapper box for a cleaner macOS feel.
+- ClipItemRow: compact type badge (26×26 rounded rect) instead of emoji; tighter row height (~50px); SVG checkmark and delete icons.
+- Settings: smaller header (15px), SF-style section labels, inline SVG close button.
+- Footer: "Clear All" turns red on hover; consistent with macOS destructive action convention.
+- Thin scrollbar (4px) with transparent track inside scroll area.
+- All global CSS selectors updated from `.dark` → `html.dark` for correct scoping.
+
+### Technical Details
+- `tauri.conf.json`: `macosPrivateApi: true`, `visible: false`, `alwaysOnTop: false`
+- `lib.rs`: `#[allow(deprecated)]` on cocoa imports; tray click handler extracts `position` for window placement; toggle logic via `window.is_visible()`
+- `+page.svelte`: uses `getCurrentWindow().hide()` instead of `.close()`; dark mode via `matchMedia`; Escape key listener
+- `SearchBar.svelte`: dispatcher changed to `input: string` (value not event); quit event removed; `bind:this` exposes `inputRef`
+- `ClipItemRow.svelte`: `onCopy` callback triggers `appWindow.hide()` in parent; `createEventDispatcher` removed (callbacks only)
+- `Settings.svelte`: `setLimit` dispatcher emits `number` directly (not wrapped in `CustomEvent`)
 
 ## [1.0.3] - 2026-02-20
 
@@ -92,6 +133,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Status |
 |---------|------|--------|
+| 1.1.0 | 2026-02-20 | ✅ Released |
 | 1.0.3 | 2026-02-20 | ✅ Released |
 | 1.0.2 | 2026-02-18 | ✅ Released |
 | 1.0.1 | 2026-02-18 | ✅ Released |

@@ -1,44 +1,51 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
 
-  export let searchText = '';
+  export let searchText: string = '';
+  export let inputRef: HTMLInputElement | null = null;
 
   const dispatch = createEventDispatcher<{
-    input: Event;
+    input: string;
     clear: void;
-    quit: void;
   }>();
 
-  function handleInput(event: Event) {
-    searchText = (event.target as HTMLInputElement).value;
-    dispatch('input', event);
+  function handleInput(e: Event) {
+    dispatch('input', (e.target as HTMLInputElement).value);
   }
 
-  function clearSearch() {
-    searchText = '';
+  function handleClear() {
     dispatch('clear');
+    inputRef?.focus();
   }
 </script>
 
 <div class="search-bar">
-  <div class="search-input-wrapper">
-    <span class="search-icon">🔍</span>
-    <input
-      type="text"
-      class="search-input"
-      placeholder="Search..."
-      bind:value={searchText}
-      on:input={handleInput}
-    />
-    {#if searchText !== ''}
-      <button class="clear-btn" on:click={clearSearch}>
-        ⓧ
-      </button>
-    {/if}
-  </div>
-  <button class="quit-btn" on:click={() => dispatch('quit')}>
-    ⓧ
-  </button>
+  <svg class="search-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.5"/>
+    <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>
+
+  <input
+    bind:this={inputRef}
+    type="text"
+    placeholder="Search"
+    value={searchText}
+    on:input={handleInput}
+    autocomplete="off"
+    autocorrect="off"
+    autocapitalize="off"
+    spellcheck="false"
+    aria-label="Search clipboard history"
+  />
+
+  {#if searchText !== ''}
+    <button class="clear-btn" on:click={handleClear} aria-label="Clear search" tabindex="-1">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7" r="6.5" fill="currentColor" opacity="0.28"/>
+        <path d="M4.5 4.5L9.5 9.5M9.5 4.5L4.5 9.5" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+    </button>
+  {/if}
 </div>
 
 <style>
@@ -46,91 +53,66 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 12px;
-  }
-
-  .search-input-wrapper {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
-    background: rgba(0, 0, 0, 0.05);
-    border-radius: 6px;
-  }
-
-  :global(.dark) .search-input-wrapper {
-    background: rgba(255, 255, 255, 0.05);
+    padding: 10px 14px;
   }
 
   .search-icon {
-    font-size: 14px;
-    opacity: 0.5;
+    color: rgba(0, 0, 0, 0.32);
+    flex-shrink: 0;
+    pointer-events: none;
   }
 
-  .search-input {
+  :global(html.dark) .search-icon {
+    color: rgba(255, 255, 255, 0.32);
+  }
+
+  input {
     flex: 1;
     border: none;
     background: transparent;
     font-size: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+    color: rgba(0, 0, 0, 0.85);
     outline: none;
+    min-width: 0;
+    letter-spacing: -0.1px;
+    -webkit-font-smoothing: antialiased;
     padding: 0;
-    color: #1a1a1a;
   }
 
-  :global(.dark) .search-input {
-    color: #e5e5e5;
+  input::placeholder {
+    color: rgba(0, 0, 0, 0.28);
   }
 
-  .search-input::placeholder {
-    color: #999;
+  :global(html.dark) input {
+    color: rgba(255, 255, 255, 0.85);
   }
 
-  :global(.dark) .search-input::placeholder {
-    color: #666;
-  }
-
-  .clear-btn,
-  .quit-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: background-color 0.15s;
+  :global(html.dark) input::placeholder {
+    color: rgba(255, 255, 255, 0.25);
   }
 
   .clear-btn {
-    font-size: 12px;
-    opacity: 0.5;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(0, 0, 0, 0.6);
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    transition: opacity 0.12s;
+    border-radius: 50%;
   }
 
   .clear-btn:hover {
-    background: rgba(0, 0, 0, 0.1);
-    opacity: 1;
+    opacity: 0.65;
   }
 
-  :global(.dark) .clear-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .quit-btn {
-    font-size: 18px;
-    color: #666;
-  }
-
-  :global(.dark) .quit-btn {
-    color: #999;
-  }
-
-  .quit-btn:hover {
-    background: rgba(0, 0, 0, 0.1);
-  }
-
-  :global(.dark) .quit-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+  :global(html.dark) .clear-btn {
+    color: rgba(255, 255, 255, 0.55);
   }
 </style>

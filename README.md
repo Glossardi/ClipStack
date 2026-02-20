@@ -7,16 +7,18 @@ Built with **Tauri V2**, **Svelte 5**, and **Rust** - no Xcode required for deve
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![macOS](https://img.shields.io/badge/platform-macOS%2014.0+-silver.svg)
 
-## ✨ Features
+## Features
 
-- 📋 **Clipboard History** - Automatically captures text and URLs
-- 🔍 **Live Search** - Filter clipboard items instantly
-- ⚡ **Quick Copy** - Click any item to copy back to clipboard with visual feedback
-- 🗑 **Delete Items** - Remove individual items via hover delete button, or clear all at once
-- 🎯 **Menu Bar Integration** - Lives in your menu bar, out of the way
-- ⚙️ **Configurable** - Adjust history limit (10 / 25 / 50 / 100 items)
-- 🚀 **Lightweight** - Built with Rust, minimal resource usage
-- ✅ **Tested** - 9 unit tests for core clipboard logic
+- **Clipboard History** - Automatically captures text and URLs as you copy
+- **Instant search** - Live-filter history as you type
+- **Click to copy & paste** - One click copies the item and closes the popover so you can paste immediately
+- **Menu bar popover** - Appears below the tray icon on click; disappears when you click elsewhere
+- **Toggle** - Click the tray icon to open; click it again (or click outside) to close
+- **Escape to dismiss** - Press Escape to hide the window
+- **Auto dark/light mode** - Follows macOS system appearance
+- **Delete items** - Per-item delete on hover, or Clear All
+- **Configurable limit** - 10 / 25 / 50 / 100 items
+- **Lightweight** - Rust backend, minimal resource usage
 
 ## 📋 Requirements
 
