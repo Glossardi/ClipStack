@@ -42,6 +42,7 @@ mod macos_panel {
 
             // Join all spaces and remain available in fullscreen contexts.
             let _: () = msg_send![ns_window, setCollectionBehavior: 273u64];
+            let _: () = msg_send![ns_window, setHasShadow: NO];
 
             let _: () = msg_send![ns_window, orderOut: nil];
         }

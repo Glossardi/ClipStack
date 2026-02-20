@@ -77,6 +77,11 @@
     async function refreshItems() {
         const items = await invoke<ClipItem[]>("get_clipboard_items");
         allItems = items;
+    }
+
+    $: {
+        searchText;
+        allItems;
         applyFilter();
     }
 
@@ -164,10 +169,6 @@
         }
     }
 
-    function onSearchInput() {
-        applyFilter();
-    }
-
     function getRelativeTime(timestamp: number): string {
         const seconds = Math.max(
             0,
@@ -199,7 +200,7 @@
             on:click={closePopover}
             aria-label="Close popup"
         >
-            ×
+            <span aria-hidden="true">×</span>
         </button>
     </header>
 
@@ -214,7 +215,6 @@
             autocorrect="off"
             autocapitalize="off"
             spellcheck="false"
-            on:input={onSearchInput}
         />
         {#if searchText.trim().length > 0}
             <button
@@ -317,7 +317,7 @@
         -webkit-backdrop-filter: blur(16px) saturate(112%);
         border-radius: 14px;
         border: 1px solid rgba(0, 0, 0, 0.12);
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+        box-shadow: none;
         overflow: hidden;
         animation: open 0.16s ease-out;
     }
@@ -325,7 +325,7 @@
     :global(html.dark) .panel {
         background: #27272b;
         border-color: rgba(255, 255, 255, 0.11);
-        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+        box-shadow: none;
     }
 
     @keyframes open {
@@ -383,10 +383,15 @@
         width: 24px;
         height: 24px;
         border-radius: 999px;
-        font-size: 19px;
-        line-height: 0.9;
         cursor: pointer;
         padding: 0;
+    }
+
+    .close-button span {
+        display: block;
+        font-size: 20px;
+        line-height: 1;
+        transform: translateY(-1px);
     }
 
     .close-button:hover {
