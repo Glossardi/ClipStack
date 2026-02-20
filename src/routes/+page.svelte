@@ -106,9 +106,6 @@
         copyFeedbackTimeout = setTimeout(() => {
             copiedItemId = null;
         }, 900);
-        setTimeout(() => {
-            closePopover();
-        }, 120);
     }
 
     async function handleDelete(item: ClipItem) {
@@ -167,8 +164,7 @@
         }
     }
 
-    function onSearchInput(event: Event) {
-        searchText = (event.target as HTMLInputElement).value;
+    function onSearchInput() {
         applyFilter();
     }
 
@@ -211,7 +207,7 @@
         <input
             bind:this={searchInput}
             type="text"
-            value={searchText}
+            bind:value={searchText}
             placeholder="Search clipboard"
             aria-label="Search clipboard history"
             autocomplete="off"
@@ -288,7 +284,6 @@
         >
             Clear All
         </button>
-        <span>Esc closes</span>
     </footer>
 </main>
 
@@ -322,9 +317,7 @@
         -webkit-backdrop-filter: blur(16px) saturate(112%);
         border-radius: 14px;
         border: 1px solid rgba(0, 0, 0, 0.12);
-        box-shadow:
-            0 2px 6px rgba(0, 0, 0, 0.14),
-            0 18px 40px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
         overflow: hidden;
         animation: open 0.16s ease-out;
     }
@@ -332,9 +325,7 @@
     :global(html.dark) .panel {
         background: #27272b;
         border-color: rgba(255, 255, 255, 0.11);
-        box-shadow:
-            0 2px 8px rgba(0, 0, 0, 0.35),
-            0 18px 44px rgba(0, 0, 0, 0.56);
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
     }
 
     @keyframes open {
@@ -383,14 +374,17 @@
     }
 
     .close-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         border: none;
         background: rgba(0, 0, 0, 0.08);
         color: rgba(0, 0, 0, 0.56);
         width: 24px;
         height: 24px;
         border-radius: 999px;
-        font-size: 16px;
-        line-height: 1;
+        font-size: 19px;
+        line-height: 0.9;
         cursor: pointer;
         padding: 0;
     }
@@ -605,7 +599,7 @@
     .footer {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start;
         padding: 9px 12px;
         border-top: 1px solid rgba(0, 0, 0, 0.07);
         background: rgba(0, 0, 0, 0.02);
@@ -639,14 +633,5 @@
     :global(html.dark) .clear-all {
         background: rgba(255, 69, 58, 0.18);
         color: #ff8d86;
-    }
-
-    .footer span {
-        color: rgba(0, 0, 0, 0.4);
-        font-size: 11px;
-    }
-
-    :global(html.dark) .footer span {
-        color: rgba(255, 255, 255, 0.38);
     }
 </style>
