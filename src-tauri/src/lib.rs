@@ -1,3 +1,5 @@
+#![allow(unexpected_cfgs)]
+
 use arboard::Clipboard;
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -22,7 +24,7 @@ use cocoa::base::{id, nil};
 #[cfg(target_os = "macos")]
 #[allow(deprecated)]
 mod macos_panel {
-    use cocoa::base::{id, nil, BOOL, NO};
+    use cocoa::base::{id, nil, BOOL, NO, YES};
     use cocoa::foundation::{NSPoint, NSRect};
     use objc::{class, msg_send, sel, sel_impl};
 
@@ -35,10 +37,6 @@ mod macos_panel {
             let panel_class = class!(NSPanel);
             object_setClass(ns_window as *mut _, panel_class as *const _ as *const u8);
 
-            // NSNonactivatingPanelMask
-            let mask: usize = msg_send![ns_window, styleMask];
-            let _: () = msg_send![ns_window, setStyleMask: mask | (1usize << 7)];
-
             // Keep panel above regular windows.
             let _: () = msg_send![ns_window, setLevel: 25i64];
 
@@ -47,6 +45,13 @@ mod macos_panel {
             let _: () = msg_send![ns_window, setHasShadow: NO];
 
             let _: () = msg_send![ns_window, orderOut: nil];
+        }
+    }
+
+    pub fn activate_app() {
+        unsafe {
+            let app: id = msg_send![class!(NSApplication), sharedApplication];
+            let _: () = msg_send![app, activateIgnoringOtherApps: YES];
         }
     }
 
@@ -558,6 +563,7 @@ pub fn run() {
                                     } else {
                                         let pointer = macos_panel::mouse_location();
                                         macos_panel::set_frame_below_point(ns_win, pointer);
+                                        macos_panel::activate_app();
                                         macos_panel::show_panel(ns_win);
                                         hide_guard_until
                                             .store(now_millis() + 320, Ordering::SeqCst);
