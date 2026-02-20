@@ -15,11 +15,15 @@ use tauri::{
 };
 
 #[cfg(target_os = "macos")]
+use block::ConcreteBlock;
+#[cfg(target_os = "macos")]
 #[allow(deprecated)]
 use cocoa::appkit::{NSApplication, NSApplicationActivationPolicyAccessory};
 #[cfg(target_os = "macos")]
 #[allow(deprecated)]
 use cocoa::base::{id, nil};
+#[cfg(target_os = "macos")]
+use objc::{class, msg_send, sel, sel_impl};
 
 #[cfg(target_os = "macos")]
 #[allow(deprecated)]
@@ -65,6 +69,17 @@ mod macos_panel {
     pub fn hide_panel(ns_window: id) {
         unsafe {
             let _: () = msg_send![ns_window, orderOut: nil];
+        }
+    }
+
+    pub fn hide_panel_async(ns_window: id) {
+        unsafe {
+            let _: () = msg_send![
+                ns_window,
+                performSelectorOnMainThread: sel!(orderOut:)
+                withObject: nil
+                waitUntilDone: NO
+            ];
         }
     }
 
@@ -502,6 +517,46 @@ pub fn run() {
             let tray_clicking_for_window_events = tray_clicking.clone();
             let hide_guard_until = Arc::new(AtomicU64::new(0));
             let hide_guard_until_for_window_events = hide_guard_until.clone();
+
+            #[cfg(target_os = "macos")]
+            {
+                // Global monitor receives clicks outside this app.
+                #[allow(deprecated)]
+                {
+                    let panel_ptr = panel.id() as usize;
+                    let tray_clicking_for_global_monitor = tray_clicking.clone();
+                    let hide_guard_for_global_monitor = hide_guard_until.clone();
+
+                    let handler = ConcreteBlock::new(move |_event: id| {
+                        if tray_clicking_for_global_monitor.load(Ordering::SeqCst) {
+                            return;
+                        }
+                        if now_millis() < hide_guard_for_global_monitor.load(Ordering::SeqCst) {
+                            return;
+                        }
+
+                        let ns_win = panel_ptr as id;
+                        macos_panel::hide_panel_async(ns_win);
+                    })
+                    .copy();
+
+                    // NSEventMaskLeftMouseDown | NSEventMaskRightMouseDown
+                    let mouse_down_mask: u64 = (1u64 << 1) | (1u64 << 3);
+                    let monitor: id = unsafe {
+                        msg_send![
+                            class!(NSEvent),
+                            addGlobalMonitorForEventsMatchingMask: mouse_down_mask
+                            handler: &*handler
+                        ]
+                    };
+
+                    // Keep monitor alive for app lifetime.
+                    unsafe {
+                        let _: id = msg_send![monitor, retain];
+                    }
+                    std::mem::forget(handler);
+                }
+            }
 
             #[cfg(target_os = "macos")]
             {

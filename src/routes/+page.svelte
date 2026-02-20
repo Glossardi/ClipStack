@@ -16,7 +16,9 @@
     let allItems: ClipItem[] = [];
     let selectedIndex = -1;
     let copiedItemId: string | null = null;
+    let deletingItemId: string | null = null;
     let copyFeedbackTimeout: ReturnType<typeof setTimeout> | null = null;
+    let deleteFeedbackTimeout: ReturnType<typeof setTimeout> | null = null;
 
     let refreshInterval: ReturnType<typeof setInterval> | null = null;
     let unlistenFocus: (() => void) | null = null;
@@ -57,6 +59,9 @@
         if (copyFeedbackTimeout) {
             clearTimeout(copyFeedbackTimeout);
         }
+        if (deleteFeedbackTimeout) {
+            clearTimeout(deleteFeedbackTimeout);
+        }
 
         const media = window.matchMedia("(prefers-color-scheme: dark)");
         if (darkModeListener) {
@@ -88,12 +93,19 @@
         }
         copyFeedbackTimeout = setTimeout(() => {
             copiedItemId = null;
-        }, 900);
+        }, 2200);
     }
 
     async function handleDelete(item: ClipItem) {
+        deletingItemId = item.id;
+        if (deleteFeedbackTimeout) {
+            clearTimeout(deleteFeedbackTimeout);
+        }
         await invoke("delete_clipboard_item", { id: item.id });
         await refreshItems();
+        deleteFeedbackTimeout = setTimeout(() => {
+            deletingItemId = null;
+        }, 350);
     }
 
     async function closePopover() {
@@ -109,14 +121,16 @@
         if (event.key === "ArrowDown") {
             if (allItems.length === 0) return;
             event.preventDefault();
-            selectedIndex = (selectedIndex + 1 + allItems.length) % allItems.length;
+            selectedIndex =
+                (selectedIndex + 1 + allItems.length) % allItems.length;
             return;
         }
 
         if (event.key === "ArrowUp") {
             if (allItems.length === 0) return;
             event.preventDefault();
-            selectedIndex = (selectedIndex - 1 + allItems.length) % allItems.length;
+            selectedIndex =
+                (selectedIndex - 1 + allItems.length) % allItems.length;
             return;
         }
 
@@ -129,7 +143,10 @@
     }
 
     function getRelativeTime(timestamp: number): string {
-        const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+        const seconds = Math.max(
+            0,
+            Math.floor((Date.now() - timestamp) / 1000),
+        );
         if (seconds < 60) return "Just now";
         const minutes = Math.floor(seconds / 60);
         if (minutes < 60) return `${minutes}m`;
@@ -167,22 +184,20 @@
                 <p class="empty-subtitle">Copy text and it will appear here.</p>
             </div>
         {:else}
-            {#each allItems as item, index (item.id)}
+            {#each allItems as item (item.id)}
                 <article class="item" role="listitem">
                     <button
                         class="item-copy"
-                        class:active={selectedIndex === index}
                         class:copied={copiedItemId === item.id}
                         type="button"
                         on:click={() => handleCopy(item)}
-                        on:mouseenter={() => {
-                            selectedIndex = index;
-                        }}
                         aria-label={`Copy ${item.content.substring(0, 80)}`}
                     >
                         <p class="item-text">{item.content}</p>
                         <p class="item-meta">
-                            {getTypeLabel(item.content_type)} · {getRelativeTime(item.created_at)}
+                            {getTypeLabel(item.content_type)} · {getRelativeTime(
+                                item.created_at,
+                            )}
                             {#if copiedItemId === item.id}
                                 · Copied
                             {/if}
@@ -190,6 +205,7 @@
                     </button>
                     <button
                         class="item-delete"
+                        class:deleting={deletingItemId === item.id}
                         type="button"
                         on:click={() => handleDelete(item)}
                         aria-label="Delete item"
@@ -293,40 +309,36 @@
         align-items: center;
         justify-content: center;
         border: none;
-        background: rgba(0, 0, 0, 0.08);
+        background: transparent;
         color: rgba(0, 0, 0, 0.56);
-        width: 24px;
-        height: 24px;
-        border-radius: 999px;
         cursor: pointer;
-        padding: 0;
+        padding: 2px 4px;
     }
 
     .close-button span {
         display: block;
-        font-size: 20px;
+        font-size: 17px;
         line-height: 1;
-        transform: translateY(-1px);
+        transform: translateY(0);
     }
 
     .close-button:hover {
-        background: rgba(0, 0, 0, 0.14);
+        color: rgba(0, 0, 0, 0.8);
     }
 
     :global(html.dark) .close-button {
-        background: rgba(255, 255, 255, 0.12);
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(255, 255, 255, 0.72);
     }
 
     :global(html.dark) .close-button:hover {
-        background: rgba(255, 255, 255, 0.18);
+        color: rgba(255, 255, 255, 0.94);
     }
 
     .list {
         flex: 1;
         overflow-y: auto;
         overscroll-behavior: contain;
-        max-height: 420px;
+        max-height: 174px;
     }
 
     .list::-webkit-scrollbar {
@@ -372,6 +384,7 @@
         display: flex;
         align-items: stretch;
         border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        position: relative;
     }
 
     :global(html.dark) .item {
@@ -385,20 +398,18 @@
         background: transparent;
         text-align: left;
         cursor: pointer;
-        padding: 10px 12px;
+        padding: 10px 34px 10px 12px;
         transition:
             background-color 120ms ease,
             transform 120ms ease;
     }
 
-    .item-copy:hover,
-    .item-copy.active {
+    .item-copy:hover {
         background: rgba(0, 0, 0, 0.04);
         transform: translateY(-1px);
     }
 
-    :global(html.dark) .item-copy:hover,
-    :global(html.dark) .item-copy.active {
+    :global(html.dark) .item-copy:hover {
         background: rgba(255, 255, 255, 0.06);
     }
 
@@ -438,19 +449,20 @@
     }
 
     .item-delete {
-        width: 32px;
+        position: absolute;
+        top: 9px;
+        right: 8px;
         border: none;
         background: transparent;
         color: rgba(0, 0, 0, 0.3);
         cursor: pointer;
-        font-size: 15px;
+        font-size: 14px;
         line-height: 1;
-        padding: 0;
+        padding: 2px;
     }
 
     .item-delete:hover {
-        color: #ff3b30;
-        background: rgba(255, 59, 48, 0.08);
+        color: rgba(0, 0, 0, 0.48);
     }
 
     :global(html.dark) .item-delete {
@@ -458,7 +470,14 @@
     }
 
     :global(html.dark) .item-delete:hover {
+        color: rgba(255, 255, 255, 0.52);
+    }
+
+    .item-delete.deleting {
+        color: #ff3b30;
+    }
+
+    :global(html.dark) .item-delete.deleting {
         color: #ff453a;
-        background: rgba(255, 69, 58, 0.15);
     }
 </style>

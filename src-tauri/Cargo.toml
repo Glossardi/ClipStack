@@ -21,6 +21,7 @@ arboard = "3"
 uuid = { version = "1", features = ["v4"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
+block = "0.1"
 cocoa = "0.26"
 objc = "0.2"
 
