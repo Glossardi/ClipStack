@@ -45,6 +45,12 @@ App-only bundle (recommended for local install testing):
 npm run tauri build -- --bundles app
 ```
 
+Distribution build (app + drag-and-drop DMG):
+
+```bash
+npm run build:macos:dmg
+```
+
 Build outputs:
 
 - `src-tauri/target/release/bundle/macos/ClipStack.app`
@@ -55,6 +61,11 @@ Run built app:
 ```bash
 open src-tauri/target/release/bundle/macos/ClipStack.app
 ```
+
+## Distribution Notes
+
+- The DMG contains `ClipStack.app` and an `Applications` shortcut for classic drag-and-drop install.
+- For broad distribution without Gatekeeper warnings, you should sign and notarize the app with an Apple Developer ID certificate.
 
 ## Data Storage
 

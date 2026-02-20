@@ -19,6 +19,11 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ### Documentation
 - Updated README with app-only production build command for local install testing.
+- Added documented distribution flow for app + DMG packaging.
+
+### Build
+- Added `scripts/build-dmg.sh` for a reliable drag-and-drop DMG package flow.
+- Added npm scripts `build:macos:app` and `build:macos:dmg`.
 
 ## [1.1.0] - 2026-02-20
 
