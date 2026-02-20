@@ -6,6 +6,25 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+### Changed
+- Added local CI-parity preflight scripts (`npm run ci:preflight`, `npm run release:preflight`) to catch release issues before push.
+- Optimized GitHub Actions runtime with npm cache, Rust cache, and concurrency cancel-in-progress.
+
+### Security
+- Added stronger local ignore rules for private notes/instructions and local signing material patterns.
+
+## [1.1.2] - 2026-02-20
+
+### Fixed
+- Removed duplicate tray icon in macOS menu bar by using one tray creation path.
+- Stabilized release CI by ensuring `build/` exists before Rust compile checks.
+
+### Added
+- Tauri updater integration with startup check, download/install, and relaunch flow.
+- Updater permissions in Tauri capabilities (`updater:default`, `process:default`).
+- Signed multi-arch release pipeline (Intel + Apple Silicon) with `latest.json` artifacts.
+- Release runbook in `RELEASING.md` and `web/README.md` placeholder for future website deployment.
+
 ### Fixed
 - Outside-click close behavior on macOS panel flow (focus-loss driven close path stabilized).
 

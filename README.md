@@ -35,6 +35,12 @@ cargo test -j 1 --manifest-path src-tauri/Cargo.toml
 cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
 ```
 
+CI-parity preflight (empfohlen vor Push):
+
+```bash
+npm run ci:preflight
+```
+
 ## Production Build
 
 ```bash
@@ -74,6 +80,7 @@ open src-tauri/target/release/bundle/macos/ClipStack.app
 - Auto-updater is configured through GitHub Releases (`latest.json` + signed artifacts).
 - CI/CD workflow lives in `.github/workflows/release.yml`.
 - Full release instructions are documented in `RELEASING.md`.
+- For public end-user updates, release artifacts must be publicly reachable.
 
 ## Data Storage
 

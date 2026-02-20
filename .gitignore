@@ -32,5 +32,17 @@ build/
 # Cache
 tmp-npm-cache/
 
-# Local agent notes
+# Local agent notes / private docs
 CLAUDE.md
+QWEN.md
+PRD.md
+AGENTS.md
+**/AGENTS.md
+*.private.md
+private/
+.claude/
+
+# Local signing material
+*.key
+*.pub
+*.password
