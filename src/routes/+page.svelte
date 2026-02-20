@@ -17,6 +17,9 @@
     let filteredItems: ClipItem[] = [];
     let searchText = "";
     let searchInput: HTMLInputElement | null = null;
+    let selectedIndex = -1;
+    let copiedItemId: string | null = null;
+    let copyFeedbackTimeout: ReturnType<typeof setTimeout> | null = null;
 
     let refreshInterval: ReturnType<typeof setInterval> | null = null;
     let unlistenFocus: (() => void) | null = null;
@@ -56,6 +59,9 @@
         }
 
         window.removeEventListener("keydown", handleKeydown);
+        if (copyFeedbackTimeout) {
+            clearTimeout(copyFeedbackTimeout);
+        }
 
         const media = window.matchMedia("(prefers-color-scheme: dark)");
         if (darkModeListener) {
@@ -78,17 +84,31 @@
         const query = searchText.trim().toLowerCase();
         if (query.length === 0) {
             filteredItems = allItems;
-            return;
+        } else {
+            filteredItems = allItems.filter((item) =>
+                item.content.toLowerCase().includes(query),
+            );
         }
 
-        filteredItems = allItems.filter((item) =>
-            item.content.toLowerCase().includes(query),
-        );
+        if (filteredItems.length === 0) {
+            selectedIndex = -1;
+        } else if (selectedIndex >= filteredItems.length) {
+            selectedIndex = filteredItems.length - 1;
+        }
     }
 
     async function handleCopy(item: ClipItem) {
         await invoke("copy_to_clipboard", { content: item.content });
-        await closePopover();
+        copiedItemId = item.id;
+        if (copyFeedbackTimeout) {
+            clearTimeout(copyFeedbackTimeout);
+        }
+        copyFeedbackTimeout = setTimeout(() => {
+            copiedItemId = null;
+        }, 900);
+        setTimeout(() => {
+            closePopover();
+        }, 120);
     }
 
     async function handleDelete(item: ClipItem) {
@@ -108,6 +128,32 @@
     function handleKeydown(event: KeyboardEvent) {
         if (event.key === "Escape") {
             closePopover();
+            return;
+        }
+
+        if (event.key === "ArrowDown") {
+            if (filteredItems.length === 0) return;
+            event.preventDefault();
+            selectedIndex =
+                (selectedIndex + 1 + filteredItems.length) %
+                filteredItems.length;
+            return;
+        }
+
+        if (event.key === "ArrowUp") {
+            if (filteredItems.length === 0) return;
+            event.preventDefault();
+            selectedIndex =
+                (selectedIndex - 1 + filteredItems.length) %
+                filteredItems.length;
+            return;
+        }
+
+        if (event.key === "Enter") {
+            if (selectedIndex < 0 || selectedIndex >= filteredItems.length)
+                return;
+            event.preventDefault();
+            handleCopy(filteredItems[selectedIndex]);
             return;
         }
 
@@ -197,12 +243,17 @@
                 <p class="empty-subtitle">Copy text and it will appear here.</p>
             </div>
         {:else}
-            {#each filteredItems as item (item.id)}
+            {#each filteredItems as item, index (item.id)}
                 <article class="item" role="listitem">
                     <button
                         class="item-copy"
+                        class:active={selectedIndex === index}
+                        class:copied={copiedItemId === item.id}
                         type="button"
                         on:click={() => handleCopy(item)}
+                        on:mouseenter={() => {
+                            selectedIndex = index;
+                        }}
                         aria-label={`Copy ${item.content.substring(0, 80)}`}
                     >
                         <p class="item-text">{item.content}</p>
@@ -210,6 +261,9 @@
                             {getTypeLabel(item.content_type)} · {getRelativeTime(
                                 item.created_at,
                             )}
+                            {#if copiedItemId === item.id}
+                                · Copied
+                            {/if}
                         </p>
                     </button>
                     <button
@@ -263,24 +317,24 @@
         max-height: 540px;
         display: flex;
         flex-direction: column;
-        background: rgba(246, 246, 246, 0.88);
-        backdrop-filter: blur(42px) saturate(170%);
-        -webkit-backdrop-filter: blur(42px) saturate(170%);
+        background: #f8f8fa;
+        backdrop-filter: blur(16px) saturate(112%);
+        -webkit-backdrop-filter: blur(16px) saturate(112%);
         border-radius: 14px;
-        border: 0.5px solid rgba(0, 0, 0, 0.12);
+        border: 1px solid rgba(0, 0, 0, 0.12);
         box-shadow:
-            0 1px 1px rgba(0, 0, 0, 0.14),
-            0 14px 40px rgba(0, 0, 0, 0.2);
+            0 2px 6px rgba(0, 0, 0, 0.14),
+            0 18px 40px rgba(0, 0, 0, 0.25);
         overflow: hidden;
         animation: open 0.16s ease-out;
     }
 
     :global(html.dark) .panel {
-        background: rgba(34, 34, 34, 0.86);
-        border-color: rgba(255, 255, 255, 0.1);
+        background: #27272b;
+        border-color: rgba(255, 255, 255, 0.11);
         box-shadow:
-            0 1px 1px rgba(0, 0, 0, 0.32),
-            0 14px 42px rgba(0, 0, 0, 0.52);
+            0 2px 8px rgba(0, 0, 0, 0.35),
+            0 18px 44px rgba(0, 0, 0, 0.56);
     }
 
     @keyframes open {
@@ -472,14 +526,28 @@
         text-align: left;
         cursor: pointer;
         padding: 10px 12px;
+        transition:
+            background-color 120ms ease,
+            transform 120ms ease;
     }
 
-    .item-copy:hover {
+    .item-copy:hover,
+    .item-copy.active {
         background: rgba(0, 0, 0, 0.04);
+        transform: translateY(-1px);
     }
 
-    :global(html.dark) .item-copy:hover {
+    :global(html.dark) .item-copy:hover,
+    :global(html.dark) .item-copy.active {
         background: rgba(255, 255, 255, 0.06);
+    }
+
+    .item-copy.copied {
+        background: rgba(52, 199, 89, 0.16);
+    }
+
+    :global(html.dark) .item-copy.copied {
+        background: rgba(48, 209, 88, 0.2);
     }
 
     .item-text {

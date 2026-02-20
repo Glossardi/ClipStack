@@ -1,6 +1,6 @@
 use arboard::Clipboard;
 use serde::{Deserialize, Serialize};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -67,21 +67,65 @@ mod macos_panel {
         }
     }
 
-    pub fn set_frame_top_left(ns_window: id, preferred_x: f64, preferred_y: f64) {
+    fn rect_contains_point(rect: NSRect, point: NSPoint) -> bool {
+        point.x >= rect.origin.x
+            && point.x <= rect.origin.x + rect.size.width
+            && point.y >= rect.origin.y
+            && point.y <= rect.origin.y + rect.size.height
+    }
+
+    fn screen_for_point(point: NSPoint) -> id {
         unsafe {
-            let screen: id = msg_send![ns_window, screen];
+            let screens: id = msg_send![class!(NSScreen), screens];
+            let count: usize = msg_send![screens, count];
+            for idx in 0..count {
+                let screen: id = msg_send![screens, objectAtIndex: idx];
+                let frame: NSRect = msg_send![screen, frame];
+                if rect_contains_point(frame, point) {
+                    return screen;
+                }
+            }
+
+            let main_screen: id = msg_send![class!(NSScreen), mainScreen];
+            if main_screen != nil {
+                return main_screen;
+            }
+
+            let first_screen: id = msg_send![screens, firstObject];
+            first_screen
+        }
+    }
+
+    pub fn mouse_location() -> NSPoint {
+        unsafe { msg_send![class!(NSEvent), mouseLocation] }
+    }
+
+    pub fn set_frame_below_point(ns_window: id, anchor: NSPoint) {
+        unsafe {
+            let screen = screen_for_point(anchor);
             if screen == nil {
                 return;
             }
 
-            let screen_frame: NSRect = msg_send![screen, frame];
+            let visible_frame: NSRect = msg_send![screen, visibleFrame];
             let window_frame: NSRect = msg_send![ns_window, frame];
+            let margin = 8.0;
+            let gap = 8.0;
 
-            let min_x = 8.0;
-            let max_x = (screen_frame.size.width - window_frame.size.width - 8.0).max(min_x);
+            let min_x = visible_frame.origin.x + margin;
+            let max_x = (visible_frame.origin.x + visible_frame.size.width
+                - window_frame.size.width
+                - margin)
+                .max(min_x);
+            let preferred_x = anchor.x - (window_frame.size.width / 2.0);
             let clamped_x = preferred_x.max(min_x).min(max_x);
 
-            let top_left = NSPoint::new(clamped_x, screen_frame.size.height - preferred_y);
+            let min_top_left_y = visible_frame.origin.y + window_frame.size.height + margin;
+            let max_top_left_y = visible_frame.origin.y + visible_frame.size.height - margin;
+            let preferred_top_left_y = anchor.y - gap;
+            let clamped_top_left_y = preferred_top_left_y.max(min_top_left_y).min(max_top_left_y);
+
+            let top_left = NSPoint::new(clamped_x, clamped_top_left_y);
             let _: () = msg_send![ns_window, setFrameTopLeftPoint: top_left];
         }
     }
@@ -374,6 +418,8 @@ pub fn run() {
 
             let tray_clicking = Arc::new(AtomicBool::new(false));
             let tray_clicking_for_window_events = tray_clicking.clone();
+            let hide_guard_until = Arc::new(AtomicU64::new(0));
+            let hide_guard_until_for_window_events = hide_guard_until.clone();
 
             #[cfg(target_os = "macos")]
             {
@@ -381,7 +427,12 @@ pub fn run() {
                 if let Some(window) = app.get_webview_window("main") {
                     window.on_window_event(move |event| match event {
                         WindowEvent::Focused(false) => {
-                            if !tray_clicking_for_window_events.load(Ordering::SeqCst) {
+                            let now = now_millis();
+                            let guard_until =
+                                hide_guard_until_for_window_events.load(Ordering::SeqCst);
+                            if !tray_clicking_for_window_events.load(Ordering::SeqCst)
+                                && now >= guard_until
+                            {
                                 macos_panel::hide_panel(panel_for_window_events.id());
                             }
                         }
@@ -411,7 +462,6 @@ pub fn run() {
                     if let TrayIconEvent::Click {
                         button: MouseButton::Left,
                         button_state,
-                        position,
                         ..
                     } = event
                     {
@@ -420,6 +470,7 @@ pub fn run() {
                             match button_state {
                                 MouseButtonState::Down => {
                                     tray_clicking.store(true, Ordering::SeqCst);
+                                    hide_guard_until.store(now_millis() + 350, Ordering::SeqCst);
                                 }
                                 MouseButtonState::Up => {
                                     let ns_win = panel.id();
@@ -427,11 +478,11 @@ pub fn run() {
                                     if macos_panel::is_visible(ns_win) {
                                         macos_panel::hide_panel(ns_win);
                                     } else {
-                                        let panel_width = 392.0;
-                                        let x = position.x - (panel_width / 2.0);
-                                        let y = position.y + 6.0;
-                                        macos_panel::set_frame_top_left(ns_win, x, y);
+                                        let pointer = macos_panel::mouse_location();
+                                        macos_panel::set_frame_below_point(ns_win, pointer);
                                         macos_panel::show_panel(ns_win);
+                                        hide_guard_until
+                                            .store(now_millis() + 320, Ordering::SeqCst);
                                     }
 
                                     let guard = tray_clicking.clone();
