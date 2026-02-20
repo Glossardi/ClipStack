@@ -30,7 +30,9 @@ npm run tauri dev
 
 ```bash
 npm run check
+npm run test
 cargo test -j 1 --manifest-path src-tauri/Cargo.toml
+cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
 ```
 
 ## Production Build
@@ -66,6 +68,12 @@ open src-tauri/target/release/bundle/macos/ClipStack.app
 
 - The DMG contains `ClipStack.app` and an `Applications` shortcut for classic drag-and-drop install.
 - For broad distribution without Gatekeeper warnings, you should sign and notarize the app with an Apple Developer ID certificate.
+
+## Auto-Update & Release
+
+- Auto-updater is configured through GitHub Releases (`latest.json` + signed artifacts).
+- CI/CD workflow lives in `.github/workflows/release.yml`.
+- Full release instructions are documented in `RELEASING.md`.
 
 ## Data Storage
 
