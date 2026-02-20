@@ -14,9 +14,6 @@
     const appWindow = getCurrentWindow();
 
     let allItems: ClipItem[] = [];
-    let filteredItems: ClipItem[] = [];
-    let searchText = "";
-    let searchInput: HTMLInputElement | null = null;
     let selectedIndex = -1;
     let copiedItemId: string | null = null;
     let copyFeedbackTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -42,11 +39,9 @@
 
         unlistenFocus = await listen("tauri://focus", async () => {
             await refreshItems();
-            setTimeout(() => searchInput?.focus(), 35);
         });
 
         window.addEventListener("keydown", handleKeydown);
-        setTimeout(() => searchInput?.focus(), 35);
     });
 
     onDestroy(() => {
@@ -77,28 +72,11 @@
     async function refreshItems() {
         const items = await invoke<ClipItem[]>("get_clipboard_items");
         allItems = items;
-    }
 
-    $: {
-        searchText;
-        allItems;
-        applyFilter();
-    }
-
-    function applyFilter() {
-        const query = searchText.trim().toLowerCase();
-        if (query.length === 0) {
-            filteredItems = allItems;
-        } else {
-            filteredItems = allItems.filter((item) =>
-                item.content.toLowerCase().includes(query),
-            );
-        }
-
-        if (filteredItems.length === 0) {
+        if (allItems.length === 0) {
             selectedIndex = -1;
-        } else if (selectedIndex >= filteredItems.length) {
-            selectedIndex = filteredItems.length - 1;
+        } else if (selectedIndex >= allItems.length) {
+            selectedIndex = allItems.length - 1;
         }
     }
 
@@ -118,11 +96,6 @@
         await refreshItems();
     }
 
-    async function handleClearAll() {
-        await invoke("clear_clipboard_items");
-        await refreshItems();
-    }
-
     async function closePopover() {
         await appWindow.hide();
     }
@@ -134,46 +107,29 @@
         }
 
         if (event.key === "ArrowDown") {
-            if (filteredItems.length === 0) return;
+            if (allItems.length === 0) return;
             event.preventDefault();
-            selectedIndex =
-                (selectedIndex + 1 + filteredItems.length) %
-                filteredItems.length;
+            selectedIndex = (selectedIndex + 1 + allItems.length) % allItems.length;
             return;
         }
 
         if (event.key === "ArrowUp") {
-            if (filteredItems.length === 0) return;
+            if (allItems.length === 0) return;
             event.preventDefault();
-            selectedIndex =
-                (selectedIndex - 1 + filteredItems.length) %
-                filteredItems.length;
+            selectedIndex = (selectedIndex - 1 + allItems.length) % allItems.length;
             return;
         }
 
         if (event.key === "Enter") {
-            if (selectedIndex < 0 || selectedIndex >= filteredItems.length)
-                return;
+            if (selectedIndex < 0 || selectedIndex >= allItems.length) return;
             event.preventDefault();
-            handleCopy(filteredItems[selectedIndex]);
+            handleCopy(allItems[selectedIndex]);
             return;
-        }
-
-        if (
-            (event.metaKey || event.ctrlKey) &&
-            event.key.toLowerCase() === "f"
-        ) {
-            event.preventDefault();
-            searchInput?.focus();
-            searchInput?.select();
         }
     }
 
     function getRelativeTime(timestamp: number): string {
-        const seconds = Math.max(
-            0,
-            Math.floor((Date.now() - timestamp) / 1000),
-        );
+        const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
         if (seconds < 60) return "Just now";
         const minutes = Math.floor(seconds / 60);
         if (minutes < 60) return `${minutes}m`;
@@ -204,42 +160,14 @@
         </button>
     </header>
 
-    <div class="search-row">
-        <input
-            bind:this={searchInput}
-            type="text"
-            bind:value={searchText}
-            placeholder="Search clipboard"
-            aria-label="Search clipboard history"
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="off"
-            spellcheck="false"
-        />
-        {#if searchText.trim().length > 0}
-            <button
-                class="clear-search"
-                type="button"
-                on:click={() => {
-                    searchText = "";
-                    applyFilter();
-                    searchInput?.focus();
-                }}
-                aria-label="Clear search"
-            >
-                Clear
-            </button>
-        {/if}
-    </div>
-
     <section class="list" role="list">
-        {#if filteredItems.length === 0}
+        {#if allItems.length === 0}
             <div class="empty-state">
                 <p class="empty-title">No clipboard history</p>
                 <p class="empty-subtitle">Copy text and it will appear here.</p>
             </div>
         {:else}
-            {#each filteredItems as item, index (item.id)}
+            {#each allItems as item, index (item.id)}
                 <article class="item" role="listitem">
                     <button
                         class="item-copy"
@@ -254,9 +182,7 @@
                     >
                         <p class="item-text">{item.content}</p>
                         <p class="item-meta">
-                            {getTypeLabel(item.content_type)} · {getRelativeTime(
-                                item.created_at,
-                            )}
+                            {getTypeLabel(item.content_type)} · {getRelativeTime(item.created_at)}
                             {#if copiedItemId === item.id}
                                 · Copied
                             {/if}
@@ -274,17 +200,6 @@
             {/each}
         {/if}
     </section>
-
-    <footer class="footer">
-        <button
-            class="clear-all"
-            type="button"
-            disabled={allItems.length === 0}
-            on:click={handleClearAll}
-        >
-            Clear All
-        </button>
-    </footer>
 </main>
 
 <style>
@@ -405,60 +320,6 @@
 
     :global(html.dark) .close-button:hover {
         background: rgba(255, 255, 255, 0.18);
-    }
-
-    .search-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 14px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-    }
-
-    :global(html.dark) .search-row {
-        border-bottom-color: rgba(255, 255, 255, 0.08);
-    }
-
-    .search-row input {
-        flex: 1;
-        min-width: 0;
-        border: 1px solid rgba(0, 0, 0, 0.12);
-        border-radius: 10px;
-        padding: 7px 10px;
-        font-size: 13px;
-        background: rgba(255, 255, 255, 0.84);
-        color: rgba(0, 0, 0, 0.86);
-        outline: none;
-    }
-
-    .search-row input:focus {
-        border-color: rgba(0, 122, 255, 0.55);
-        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.16);
-    }
-
-    :global(html.dark) .search-row input {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.14);
-        color: rgba(255, 255, 255, 0.9);
-    }
-
-    :global(html.dark) .search-row input:focus {
-        border-color: rgba(10, 132, 255, 0.65);
-        box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.22);
-    }
-
-    .clear-search {
-        border: none;
-        background: transparent;
-        color: #007aff;
-        font-size: 12px;
-        font-weight: 600;
-        cursor: pointer;
-        padding: 0;
-    }
-
-    :global(html.dark) .clear-search {
-        color: #0a84ff;
     }
 
     .list {
@@ -599,44 +460,5 @@
     :global(html.dark) .item-delete:hover {
         color: #ff453a;
         background: rgba(255, 69, 58, 0.15);
-    }
-
-    .footer {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        padding: 9px 12px;
-        border-top: 1px solid rgba(0, 0, 0, 0.07);
-        background: rgba(0, 0, 0, 0.02);
-    }
-
-    :global(html.dark) .footer {
-        border-top-color: rgba(255, 255, 255, 0.08);
-        background: rgba(255, 255, 255, 0.03);
-    }
-
-    .clear-all {
-        border: none;
-        border-radius: 8px;
-        background: rgba(255, 59, 48, 0.09);
-        color: #d70015;
-        font-size: 12px;
-        font-weight: 600;
-        padding: 6px 10px;
-        cursor: pointer;
-    }
-
-    .clear-all:disabled {
-        opacity: 0.4;
-        cursor: default;
-    }
-
-    .clear-all:not(:disabled):hover {
-        background: rgba(255, 59, 48, 0.16);
-    }
-
-    :global(html.dark) .clear-all {
-        background: rgba(255, 69, 58, 0.18);
-        color: #ff8d86;
     }
 </style>

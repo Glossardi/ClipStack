@@ -1,5 +1,7 @@
 use arboard::Clipboard;
 use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -161,6 +163,7 @@ struct ClipboardState {
     items: Arc<Mutex<Vec<ClipItem>>>,
     history_limit: Arc<Mutex<usize>>,
     last_seen: Arc<Mutex<Option<String>>>,
+    storage_path: Arc<Mutex<Option<PathBuf>>>,
 }
 
 impl ClipboardState {
@@ -169,6 +172,7 @@ impl ClipboardState {
             items: Arc::new(Mutex::new(Vec::new())),
             history_limit: Arc::new(Mutex::new(50)),
             last_seen: Arc::new(Mutex::new(None)),
+            storage_path: Arc::new(Mutex::new(None)),
         }
     }
 }
@@ -229,6 +233,45 @@ fn refresh_last_seen(state: &ClipboardState, content: &str) {
     *last_seen = Some(content.to_string());
 }
 
+fn set_storage_path(state: &ClipboardState, path: PathBuf) {
+    *state.storage_path.lock().unwrap() = Some(path);
+}
+
+fn persist_items_to_path(path: &Path, items: &[ClipItem]) -> Result<(), String> {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+
+    let payload = serde_json::to_vec(items).map_err(|e| e.to_string())?;
+    let temp_path = path.with_extension("tmp");
+    fs::write(&temp_path, payload).map_err(|e| e.to_string())?;
+    fs::rename(&temp_path, path).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+fn persist_items(state: &ClipboardState) -> Result<(), String> {
+    let path = state.storage_path.lock().unwrap().clone();
+    let Some(path) = path else {
+        return Ok(());
+    };
+
+    let items = state.items.lock().unwrap().clone();
+    persist_items_to_path(&path, &items)
+}
+
+fn load_items_from_path(path: &Path) -> Result<Vec<ClipItem>, String> {
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
+
+    let raw = fs::read(path).map_err(|e| e.to_string())?;
+    if raw.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    serde_json::from_slice::<Vec<ClipItem>>(&raw).map_err(|e| e.to_string())
+}
+
 fn start_clipboard_monitor(state: ClipboardState) {
     thread::spawn(move || {
         let mut clipboard = match Clipboard::new() {
@@ -254,6 +297,7 @@ fn start_clipboard_monitor(state: ClipboardState) {
 
                     if should_capture {
                         let _ = upsert_clip_item(&state, content);
+                        let _ = persist_items(&state);
                     }
                 }
             }
@@ -277,19 +321,25 @@ fn copy_to_clipboard(content: String, state: State<ClipboardState>) -> Result<()
 
     refresh_last_seen(state.inner(), &content);
     let _ = upsert_clip_item(state.inner(), content);
+    persist_items(state.inner())?;
 
     Ok(())
 }
 
 #[tauri::command]
 fn add_clipboard_item(content: String, state: State<ClipboardState>) -> Result<ClipItem, String> {
-    upsert_clip_item(state.inner(), content).ok_or_else(|| "Clipboard content is empty".to_string())
+    let item = upsert_clip_item(state.inner(), content)
+        .ok_or_else(|| "Clipboard content is empty".to_string())?;
+    persist_items(state.inner())?;
+    Ok(item)
 }
 
 #[tauri::command]
 fn delete_clipboard_item(id: String, state: State<ClipboardState>) -> Result<(), String> {
     let mut items = state.items.lock().unwrap();
     items.retain(|item| item.id != id);
+    drop(items);
+    persist_items(state.inner())?;
     Ok(())
 }
 
@@ -297,6 +347,7 @@ fn delete_clipboard_item(id: String, state: State<ClipboardState>) -> Result<(),
 fn clear_clipboard_items(state: State<ClipboardState>) -> Result<(), String> {
     state.items.lock().unwrap().clear();
     *state.last_seen.lock().unwrap() = None;
+    persist_items(state.inner())?;
     Ok(())
 }
 
@@ -308,6 +359,8 @@ fn set_history_limit(limit: usize, state: State<ClipboardState>) {
 
     let mut items = state.items.lock().unwrap();
     trim_to_limit(&mut items, clamped_limit);
+    drop(items);
+    let _ = persist_items(state.inner());
 }
 
 #[tauri::command]
@@ -382,6 +435,29 @@ pub fn run() {
             get_from_clipboard
         ])
         .setup(move |app| {
+            let storage_path = app
+                .path()
+                .app_data_dir()
+                .map_err(|e| e.to_string())?
+                .join("clipboard_history.json");
+            set_storage_path(&clipboard_state, storage_path.clone());
+
+            match load_items_from_path(&storage_path) {
+                Ok(items) => {
+                    *clipboard_state.items.lock().unwrap() = items;
+                    let latest = clipboard_state
+                        .items
+                        .lock()
+                        .unwrap()
+                        .first()
+                        .map(|item| item.content.clone());
+                    *clipboard_state.last_seen.lock().unwrap() = latest;
+                }
+                Err(err) => {
+                    eprintln!("failed to load clipboard history: {err}");
+                }
+            }
+
             start_clipboard_monitor(clipboard_state.clone());
 
             #[cfg(target_os = "macos")]
@@ -456,6 +532,7 @@ pub fn run() {
                         let state = app.state::<ClipboardState>();
                         state.items.lock().unwrap().clear();
                         *state.last_seen.lock().unwrap() = None;
+                        let _ = persist_items(state.inner());
                     }
                     _ => {}
                 })
