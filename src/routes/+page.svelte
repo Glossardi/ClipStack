@@ -38,17 +38,6 @@
       setTimeout(() => searchInputRef?.focus(), 50);
     });
 
-    // Hide window when it loses focus (click outside)
-    await listen('tauri://blur', () => {
-      // Small delay so internal button clicks don't trigger hide
-      setTimeout(async () => {
-        const focused = await appWindow.isFocused();
-        if (!focused) {
-          await appWindow.hide();
-        }
-      }, 100);
-    });
-
     // Keyboard: Escape hides window
     window.addEventListener('keydown', handleKeydown);
 

@@ -1,11 +1,11 @@
 use arboard::Clipboard;
 use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, TrayIconBuilder, TrayIconEvent},
-    Manager, PhysicalPosition, State,
+    Manager, PhysicalPosition, State, WindowEvent,
 };
 
 // TODO(#migration): migrate to objc2-app-kit when cocoa 0.26 is fully superseded
@@ -295,6 +295,13 @@ pub fn run() {
 
             let menu = Menu::with_items(app, &[&settings, &quit])?;
 
+            // Shared timestamp: records when we last showed the window.
+            // The blur handler ignores Focused(false) events within 400ms of a show,
+            // preventing the flash-close on macOS where the tray click briefly steals focus.
+            let last_shown: Arc<Mutex<Option<Instant>>> = Arc::new(Mutex::new(None));
+            let last_shown_tray = last_shown.clone();
+            let last_shown_blur = last_shown.clone();
+
             let _tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&menu)
@@ -311,7 +318,7 @@ pub fn run() {
                     }
                     _ => {}
                 })
-                .on_tray_icon_event(|tray, event| {
+                .on_tray_icon_event(move |tray, event| {
                     if let TrayIconEvent::Click {
                         button: MouseButton::Left,
                         position,
@@ -324,10 +331,11 @@ pub fn run() {
                                 // Toggle: hide if already open
                                 let _ = window.hide();
                             } else {
+                                // Record show time before focusing
+                                *last_shown_tray.lock().unwrap() = Some(Instant::now());
                                 // Position window below the tray icon, centered on click point
                                 let window_width = 380.0_f64;
                                 let x = (position.x - window_width / 2.0).max(0.0);
-                                // On macOS the menu bar is at the top; place window just below it
                                 let y = position.y + 4.0;
                                 let _ = window.set_position(PhysicalPosition::new(x as i32, y as i32));
                                 let _ = window.show();
@@ -337,6 +345,25 @@ pub fn run() {
                     }
                 })
                 .build(app)?;
+
+            // Auto-hide when window loses focus (click outside).
+            if let Some(window) = app.get_webview_window("main") {
+                let win = window.clone();
+                window.on_window_event(move |event| {
+                    if let WindowEvent::Focused(false) = event {
+                        // Ignore blur events within 400ms of a show — macOS briefly
+                        // fires Focused(false) during the tray-click → show sequence.
+                        let guard = last_shown_blur.lock().unwrap();
+                        if let Some(t) = *guard {
+                            if t.elapsed() < Duration::from_millis(400) {
+                                return;
+                            }
+                        }
+                        drop(guard);
+                        let _ = win.hide();
+                    }
+                });
+            }
 
             Ok(())
         })
