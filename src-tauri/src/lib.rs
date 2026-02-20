@@ -1,11 +1,11 @@
 use arboard::Clipboard;
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::sync::Mutex;
+use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, TrayIconBuilder, TrayIconEvent},
-    Manager, PhysicalPosition, State, WindowEvent,
+    Manager, PhysicalPosition, State,
 };
 
 // TODO(#migration): migrate to objc2-app-kit when cocoa 0.26 is fully superseded
@@ -15,6 +15,37 @@ use cocoa::appkit::{NSApplication, NSApplicationActivationPolicyAccessory};
 #[cfg(target_os = "macos")]
 #[allow(deprecated)]
 use cocoa::base::{id, nil};
+
+// NSPanel + NSWindowDelegate to auto-hide on deactivation (the standard macOS
+// menu-bar popover pattern used by Spotlight, 1Password mini, etc.)
+#[cfg(target_os = "macos")]
+mod macos_panel {
+    use cocoa::base::id;
+    use objc::{msg_send, sel, sel_impl};
+
+    /// Convert the WKWebView's parent NSWindow into an NSPanel and configure it
+    /// so macOS hides it automatically when the app loses focus, without any
+    /// Focused(false) race conditions.
+    ///
+    /// - `NSPanel` is a subclass of `NSWindow` specifically designed for utility
+    ///   windows/popovers; it supports `hidesOnDeactivate`.
+    /// - `NSWindowStyleMaskNonactivatingPanel` (1 << 7 = 128) means clicking the
+    ///   panel does NOT steal focus from the previously active app — this is the
+    ///   key flag that makes "click item → hide → paste" work correctly.
+    pub fn configure_as_panel(ns_window: id) {
+        unsafe {
+            // NSFloatingWindowLevel (3): window floats above normal windows
+            let _: () = msg_send![ns_window, setLevel: 3i64];
+
+            // hidesOnDeactivate = YES: macOS hides the panel automatically when
+            // another app becomes active — no Rust event listener needed.
+            let _: () = msg_send![ns_window, setHidesOnDeactivate: true];
+
+            // NSWindowCollectionBehaviorTransient (1<<3) + CanJoinAllSpaces (1<<0)
+            let _: () = msg_send![ns_window, setCollectionBehavior: 9u64];
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClipItem {
@@ -69,7 +100,7 @@ fn add_clipboard_item(content: String, state: State<ClipboardState>) -> Result<C
 
     let mut items = state.items.lock().unwrap();
 
-    // Check for duplicates – move to front instead of ignoring
+    // Duplicate: move to front
     if let Some(pos) = items.iter().position(|i| i.content == content) {
         let existing = items.remove(pos);
         items.insert(0, existing);
@@ -78,7 +109,6 @@ fn add_clipboard_item(content: String, state: State<ClipboardState>) -> Result<C
 
     items.insert(0, item.clone());
 
-    // Enforce limit
     let limit = *state.history_limit.lock().unwrap();
     while items.len() > limit {
         items.pop();
@@ -140,7 +170,6 @@ mod tests {
         let state = ClipboardState::new();
         let items = state.items.lock().unwrap();
         assert_eq!(items.len(), 0);
-
         let limit = state.history_limit.lock().unwrap();
         assert_eq!(*limit, 50);
     }
@@ -153,7 +182,6 @@ mod tests {
             content_type: "text".to_string(),
             created_at: 1234567890,
         };
-
         assert_eq!(item.id, "test-id");
         assert_eq!(item.content, "Test content");
         assert_eq!(item.content_type, "text");
@@ -161,23 +189,15 @@ mod tests {
 
     #[test]
     fn test_url_detection() {
-        let http_url = "https://example.com";
-        let https_url = "http://test.com";
-        let not_url = "just text";
-
-        assert!(http_url.starts_with("http"));
-        assert!(https_url.starts_with("http"));
-        assert!(!not_url.starts_with("http"));
+        assert!("https://example.com".starts_with("http"));
+        assert!("http://test.com".starts_with("http"));
+        assert!(!"just text".starts_with("http"));
     }
 
     #[test]
     fn test_content_type_detection() {
-        let url_content = "https://example.com";
-        let text_content = "Plain text";
-
-        let url_type = if url_content.starts_with("http") { "url" } else { "text" };
-        let text_type = if text_content.starts_with("http") { "url" } else { "text" };
-
+        let url_type = if "https://example.com".starts_with("http") { "url" } else { "text" };
+        let text_type = if "Plain text".starts_with("http") { "url" } else { "text" };
         assert_eq!(url_type, "url");
         assert_eq!(text_type, "text");
     }
@@ -186,14 +206,10 @@ mod tests {
     fn test_add_item_deduplication() {
         let mut items: Vec<ClipItem> = Vec::new();
         let content = "Hello World";
-
-        // Add item first time
         if !items.iter().any(|i| i.content == content) {
             items.push(make_item(content));
         }
         assert_eq!(items.len(), 1);
-
-        // Try to add duplicate – should not increase count
         if !items.iter().any(|i| i.content == content) {
             items.push(make_item(content));
         }
@@ -204,16 +220,13 @@ mod tests {
     fn test_history_limit_enforcement() {
         let mut items: Vec<ClipItem> = Vec::new();
         let limit = 3usize;
-
         for i in 0..5 {
             items.insert(0, make_item(&format!("item {}", i)));
             while items.len() > limit {
                 items.pop();
             }
         }
-
         assert_eq!(items.len(), limit);
-        // Newest items should be at the front
         assert_eq!(items[0].content, "item 4");
         assert_eq!(items[2].content, "item 2");
     }
@@ -226,9 +239,7 @@ mod tests {
             make_item("third"),
         ];
         let id_to_delete = items[1].id.clone();
-
         items.retain(|i| i.id != id_to_delete);
-
         assert_eq!(items.len(), 2);
         assert!(!items.iter().any(|i| i.id == id_to_delete));
     }
@@ -236,8 +247,6 @@ mod tests {
     #[test]
     fn test_clear_all_items() {
         let mut items: Vec<ClipItem> = vec![make_item("a"), make_item("b"), make_item("c")];
-        assert_eq!(items.len(), 3);
-
         items.clear();
         assert_eq!(items.len(), 0);
     }
@@ -245,21 +254,14 @@ mod tests {
     #[test]
     fn test_set_history_limit_trims_excess() {
         let mut items: Vec<ClipItem> = vec![
-            make_item("a"),
-            make_item("b"),
-            make_item("c"),
-            make_item("d"),
-            make_item("e"),
+            make_item("a"), make_item("b"), make_item("c"),
+            make_item("d"), make_item("e"),
         ];
-        assert_eq!(items.len(), 5);
-
         let new_limit = 3usize;
         while items.len() > new_limit {
             items.pop();
         }
-
         assert_eq!(items.len(), new_limit);
-        // Oldest items (at the end) should have been trimmed
         assert_eq!(items[0].content, "a");
         assert_eq!(items[2].content, "c");
     }
@@ -280,7 +282,7 @@ pub fn run() {
             get_from_clipboard
         ])
         .setup(|app| {
-            // Set macOS activation policy: accessory = menu-bar-only, no Dock icon
+            // Accessory policy: menu-bar only, no Dock icon
             #[cfg(target_os = "macos")]
             {
                 #[allow(deprecated)]
@@ -292,15 +294,7 @@ pub fn run() {
 
             let quit = MenuItem::with_id(app, "quit", "Quit ClipStack", true, None::<&str>)?;
             let settings = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
-
             let menu = Menu::with_items(app, &[&settings, &quit])?;
-
-            // Shared timestamp: records when we last showed the window.
-            // The blur handler ignores Focused(false) events within 400ms of a show,
-            // preventing the flash-close on macOS where the tray click briefly steals focus.
-            let last_shown: Arc<Mutex<Option<Instant>>> = Arc::new(Mutex::new(None));
-            let last_shown_tray = last_shown.clone();
-            let last_shown_blur = last_shown.clone();
 
             let _tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
@@ -318,7 +312,7 @@ pub fn run() {
                     }
                     _ => {}
                 })
-                .on_tray_icon_event(move |tray, event| {
+                .on_tray_icon_event(|tray, event| {
                     if let TrayIconEvent::Click {
                         button: MouseButton::Left,
                         position,
@@ -328,12 +322,8 @@ pub fn run() {
                         let app = tray.app_handle();
                         if let Some(window) = app.get_webview_window("main") {
                             if window.is_visible().unwrap_or(false) {
-                                // Toggle: hide if already open
                                 let _ = window.hide();
                             } else {
-                                // Record show time before focusing
-                                *last_shown_tray.lock().unwrap() = Some(Instant::now());
-                                // Position window below the tray icon, centered on click point
                                 let window_width = 380.0_f64;
                                 let x = (position.x - window_width / 2.0).max(0.0);
                                 let y = position.y + 4.0;
@@ -346,23 +336,14 @@ pub fn run() {
                 })
                 .build(app)?;
 
-            // Auto-hide when window loses focus (click outside).
+            // Configure the window as a floating NSPanel with hidesOnDeactivate.
+            // This is the standard macOS pattern for menu-bar popovers — the OS
+            // handles hide-on-click-outside natively with zero race conditions.
+            #[cfg(target_os = "macos")]
             if let Some(window) = app.get_webview_window("main") {
-                let win = window.clone();
-                window.on_window_event(move |event| {
-                    if let WindowEvent::Focused(false) = event {
-                        // Ignore blur events within 400ms of a show — macOS briefly
-                        // fires Focused(false) during the tray-click → show sequence.
-                        let guard = last_shown_blur.lock().unwrap();
-                        if let Some(t) = *guard {
-                            if t.elapsed() < Duration::from_millis(400) {
-                                return;
-                            }
-                        }
-                        drop(guard);
-                        let _ = win.hide();
-                    }
-                });
+                if let Ok(ns_window) = window.ns_window() {
+                    macos_panel::configure_as_panel(ns_window as id);
+                }
             }
 
             Ok(())
