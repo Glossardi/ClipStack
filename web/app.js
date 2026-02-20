@@ -1,3 +1,5 @@
+import { selectLatestDmgAssets } from "./release-utils.js";
+
 const DEFAULT_CONFIG = {
   siteUrl: "https://clipstack.click",
   githubRepo: "Glossardi/ClipStack",
@@ -12,9 +14,8 @@ const TEXT = {
     "nav.about": "About",
     "nav.github": "GitHub",
     "hero.badge": "Now available for macOS",
-    "hero.title": "Clipboard history, minus the clutter.",
-    "hero.subtitle":
-      "Minimal. Native-feeling. Built for people who copy all day.",
+    "hero.title": "ClipStack",
+    "hero.subtitle": "Clipboard history in your menu bar.",
     "hero.cta_arm": "Download for Apple Silicon",
     "hero.cta_intel": "Download for Intel Mac",
     "hero.loading": "Looking up latest release...",
@@ -31,14 +32,11 @@ const TEXT = {
     "trust.opensource": "Open source (MIT)",
     "trust.private": "No cloud sync required",
     "feature.one.title": "Made for the menu bar",
-    "feature.one.body":
-      "Quick access, no noisy dashboard, and no onboarding maze.",
+    "feature.one.body": "Fast access. No clutter.",
     "feature.two.title": "Fast by design",
-    "feature.two.body":
-      "Tiny footprint, instant copy actions, and smooth keyboard flow.",
+    "feature.two.body": "Tiny footprint and smooth keyboard flow.",
     "feature.three.title": "Simple install",
-    "feature.three.body":
-      "Pick your Mac chip, download the DMG, drag to Applications.",
+    "feature.three.body": "Download. Drag to Applications. Done.",
     "faq.title": "Frequently asked questions",
     "faq.q1.q": "How do I install ClipStack on macOS?",
     "faq.q1.a":
@@ -67,9 +65,8 @@ const TEXT = {
     "nav.about": "Über",
     "nav.github": "GitHub",
     "hero.badge": "Jetzt für macOS verfügbar",
-    "hero.title": "Clipboard-Verlauf ohne Ballast.",
-    "hero.subtitle":
-      "Minimalistisch. Nativ. Für Menschen, die täglich viel kopieren.",
+    "hero.title": "ClipStack",
+    "hero.subtitle": "Clipboard-Verlauf in deiner Menüleiste.",
     "hero.cta_arm": "Download für Apple Silicon",
     "hero.cta_intel": "Download für Intel Mac",
     "hero.loading": "Neueste Version wird geladen...",
@@ -86,13 +83,11 @@ const TEXT = {
     "trust.opensource": "Open Source (MIT)",
     "trust.private": "Kein Cloud-Sync nötig",
     "feature.one.title": "Für die Menüleiste gebaut",
-    "feature.one.body":
-      "Schneller Zugriff, kein überladenes Dashboard, kein Onboarding-Stress.",
+    "feature.one.body": "Schneller Zugriff. Kein Ballast.",
     "feature.two.title": "Auf Geschwindigkeit optimiert",
-    "feature.two.body":
-      "Kleiner Footprint, sofortige Copy-Aktionen und flüssiger Keyboard-Flow.",
+    "feature.two.body": "Kleiner Footprint und flüssiger Keyboard-Flow.",
     "feature.three.title": "Einfache Installation",
-    "feature.three.body": "Mac-Chip wählen, DMG laden, in Programme ziehen.",
+    "feature.three.body": "Download. In Programme ziehen. Fertig.",
     "faq.title": "Häufige Fragen",
     "faq.q1.q": "Wie installiere ich ClipStack auf macOS?",
     "faq.q1.a":
@@ -200,23 +195,6 @@ function fallbackDownloadCard(anchor, metaNode) {
   metaNode.textContent = t("hero.release_fallback");
 }
 
-function classifyDmgAsset(name) {
-  const lower = name.toLowerCase();
-  if (!lower.endsWith(".dmg")) {
-    return null;
-  }
-  if (/(arm64|aarch64|apple[-_ ]?silicon|silicon)/.test(lower)) {
-    return "apple_silicon";
-  }
-  if (/(x86_64|x64|intel|amd64)/.test(lower)) {
-    return "intel";
-  }
-  if (/universal/.test(lower)) {
-    return "universal";
-  }
-  return "unknown";
-}
-
 async function loadLatestRelease() {
   const versionNode = document.getElementById("latest-version");
   const updatedNode = document.getElementById("latest-updated");
@@ -249,45 +227,9 @@ async function loadLatestRelease() {
     );
     state.releaseVersion = version;
 
-    const dmgs = (release.assets || []).filter((asset) =>
-      String(asset.name || "")
-        .toLowerCase()
-        .endsWith(".dmg"),
+    const { armAsset, intelAsset } = selectLatestDmgAssets(
+      release.assets || [],
     );
-
-    let armAsset = null;
-    let intelAsset = null;
-    let universalAsset = null;
-    let unknownAssets = [];
-
-    dmgs.forEach((asset) => {
-      const type = classifyDmgAsset(asset.name || "");
-      if (type === "apple_silicon" && !armAsset) {
-        armAsset = asset;
-      } else if (type === "intel" && !intelAsset) {
-        intelAsset = asset;
-      } else if (type === "universal" && !universalAsset) {
-        universalAsset = asset;
-      } else {
-        unknownAssets.push(asset);
-      }
-    });
-
-    if (!armAsset && universalAsset) {
-      armAsset = universalAsset;
-    }
-    if (!intelAsset && universalAsset) {
-      intelAsset = universalAsset;
-    }
-
-    if (!armAsset && unknownAssets.length) {
-      armAsset = unknownAssets[0];
-    }
-    if (!intelAsset && unknownAssets.length > 1) {
-      intelAsset = unknownAssets[1];
-    } else if (!intelAsset && unknownAssets.length === 1 && !armAsset) {
-      intelAsset = unknownAssets[0];
-    }
 
     if (armAsset?.browser_download_url) {
       updateDownloadCard(

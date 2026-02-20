@@ -5,6 +5,7 @@ One-page Download Website for `clipstack.click` (EN/DE, dark minimal style, stat
 ## Scope
 
 - Minimal SaaS-style one pager with focus on product download
+- Extra-minimal hero with very low copy (product-first)
 - Bilingual UI (English default, German auto-switch by browser language)
 - Auto-fetch latest GitHub release version and download links
 - Umami analytics for page views + download events
@@ -17,6 +18,7 @@ One-page Download Website for `clipstack.click` (EN/DE, dark minimal style, stat
   - `index.html`
   - `styles.css`
   - `app.js`
+  - `release-utils.js`
 - Runtime config injection:
   - `env.js` is generated at container start from ENV vars
   - Script: `docker/40-generate-env.sh`
@@ -98,6 +100,15 @@ Note:
 - Always use a local web server.
 - Avoid opening `index.html` directly via `file://` for realistic JS/API behavior.
 
+### Option C: Test-driven checks (release mapping)
+
+```bash
+cd web
+npm run test
+```
+
+This runs `release-utils.test.js` and validates architecture mapping/fallback behavior.
+
 ## Coolify Deployment
 
 Recommended for an orphan website branch:
@@ -141,6 +152,8 @@ Container startup behavior:
 - `index.html`: main page, SEO tags, structured data
 - `styles.css`: visual language, spacing, interactions, responsive rules
 - `app.js`: i18n, release API fetch, download mapping, Umami events
+- `release-utils.js`: pure release mapping logic used by `app.js`
+- `release-utils.test.js`: unit tests for release mapping logic
 - `env.js`: default runtime config (overwritten in Docker runtime)
 - `imprint.html`: legal placeholder page
 - `assets/`: logo, favicon, app preview
