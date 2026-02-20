@@ -1,397 +1,584 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
-  import { invoke } from '@tauri-apps/api/core';
-  import { getCurrentWindow } from '@tauri-apps/api/window';
-  import { listen } from '@tauri-apps/api/event';
-  import ClipItemRow from './ClipItemRow.svelte';
-  import SearchBar from './SearchBar.svelte';
-  import Settings from './Settings.svelte';
+    import { onDestroy, onMount } from "svelte";
+    import { invoke } from "@tauri-apps/api/core";
+    import { listen } from "@tauri-apps/api/event";
+    import { getCurrentWindow } from "@tauri-apps/api/window";
 
-  interface ClipItem {
-    id: string;
-    content: string;
-    content_type: string;
-    created_at: number;
-  }
+    interface ClipItem {
+        id: string;
+        content: string;
+        content_type: string;
+        created_at: number;
+    }
 
-  let clipItems: ClipItem[] = [];
-  let filteredItems: ClipItem[] = [];
-  let searchText = '';
-  let showSettings = false;
-  let historyLimit = 50;
-  let searchInputRef: HTMLInputElement | null = null;
+    const appWindow = getCurrentWindow();
 
-  const appWindow = getCurrentWindow();
+    let allItems: ClipItem[] = [];
+    let filteredItems: ClipItem[] = [];
+    let searchText = "";
+    let searchInput: HTMLInputElement | null = null;
 
-  onMount(async () => {
-    // Apply dark mode based on system preference
-    applyColorScheme();
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyColorScheme);
+    let refreshInterval: ReturnType<typeof setInterval> | null = null;
+    let unlistenFocus: (() => void) | null = null;
+    let darkModeListener: ((event: MediaQueryListEvent) => void) | null = null;
 
-    // Load initial items
-    clipItems = await invoke<ClipItem[]>('get_clipboard_items');
-    filteredItems = clipItems;
+    const REFRESH_INTERVAL_MS = 700;
 
-    // Auto-focus search and refresh when window gains focus
-    await listen('tauri://focus', () => {
-      refreshItems();
-      setTimeout(() => searchInputRef?.focus(), 50);
+    onMount(async () => {
+        applyColorScheme();
+
+        const media = window.matchMedia("(prefers-color-scheme: dark)");
+        darkModeListener = () => applyColorScheme();
+        media.addEventListener("change", darkModeListener);
+
+        await refreshItems();
+
+        refreshInterval = setInterval(() => {
+            refreshItems();
+        }, REFRESH_INTERVAL_MS);
+
+        unlistenFocus = await listen("tauri://focus", async () => {
+            await refreshItems();
+            setTimeout(() => searchInput?.focus(), 35);
+        });
+
+        window.addEventListener("keydown", handleKeydown);
+        setTimeout(() => searchInput?.focus(), 35);
     });
 
-    // Keyboard: Escape hides window
-    window.addEventListener('keydown', handleKeydown);
-
-    // Start clipboard monitoring
-    startClipboardMonitoring();
-  });
-
-  function applyColorScheme() {
-    const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    document.documentElement.classList.toggle('dark', dark);
-  }
-
-  async function refreshItems() {
-    clipItems = await invoke<ClipItem[]>('get_clipboard_items');
-    applyFilter();
-  }
-
-  let monitorInterval: ReturnType<typeof setInterval> | null = null;
-
-  function startClipboardMonitoring() {
-    let lastClipboard = '';
-
-    monitorInterval = setInterval(async () => {
-      try {
-        const current = await invoke<string>('get_from_clipboard');
-        if (current && current !== lastClipboard && current.trim().length > 0) {
-          lastClipboard = current;
-          await invoke('add_clipboard_item', { content: current });
-          await refreshItems();
+    onDestroy(() => {
+        if (refreshInterval !== null) {
+            clearInterval(refreshInterval);
         }
-      } catch {
-        // Clipboard might be empty or contain non-text data
-      }
-    }, 500);
-  }
 
-  onDestroy(() => {
-    if (monitorInterval !== null) clearInterval(monitorInterval);
-    window.removeEventListener('keydown', handleKeydown);
-    window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', applyColorScheme);
-  });
+        if (unlistenFocus) {
+            unlistenFocus();
+        }
 
-  function applyFilter() {
-    if (searchText.trim() === '') {
-      filteredItems = clipItems;
-    } else {
-      const search = searchText.toLowerCase();
-      filteredItems = clipItems.filter(item =>
-        item.content.toLowerCase().includes(search)
-      );
+        window.removeEventListener("keydown", handleKeydown);
+
+        const media = window.matchMedia("(prefers-color-scheme: dark)");
+        if (darkModeListener) {
+            media.removeEventListener("change", darkModeListener);
+        }
+    });
+
+    function applyColorScheme() {
+        const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.classList.toggle("dark", dark);
     }
-  }
 
-  function handleSearchInput(event: CustomEvent<string>) {
-    searchText = event.detail;
-    applyFilter();
-  }
-
-  async function handleCopy(item: ClipItem) {
-    await invoke('copy_to_clipboard', { content: item.content });
-    // Hide window so user can immediately paste
-    await appWindow.hide();
-  }
-
-  async function handleDelete(item: ClipItem) {
-    await invoke('delete_clipboard_item', { id: item.id });
-    await refreshItems();
-  }
-
-  async function handleClearAll() {
-    await invoke('clear_clipboard_items');
-    await refreshItems();
-  }
-
-  function toggleSettings() {
-    showSettings = !showSettings;
-  }
-
-  function handleCloseSettings() {
-    showSettings = false;
-  }
-
-  function handleKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape') {
-      if (showSettings) {
-        showSettings = false;
-      } else {
-        appWindow.hide();
-      }
+    async function refreshItems() {
+        const items = await invoke<ClipItem[]>("get_clipboard_items");
+        allItems = items;
+        applyFilter();
     }
-  }
 
-  $: if (searchText === '') applyFilter();
+    function applyFilter() {
+        const query = searchText.trim().toLowerCase();
+        if (query.length === 0) {
+            filteredItems = allItems;
+            return;
+        }
+
+        filteredItems = allItems.filter((item) =>
+            item.content.toLowerCase().includes(query),
+        );
+    }
+
+    async function handleCopy(item: ClipItem) {
+        await invoke("copy_to_clipboard", { content: item.content });
+        await closePopover();
+    }
+
+    async function handleDelete(item: ClipItem) {
+        await invoke("delete_clipboard_item", { id: item.id });
+        await refreshItems();
+    }
+
+    async function handleClearAll() {
+        await invoke("clear_clipboard_items");
+        await refreshItems();
+    }
+
+    async function closePopover() {
+        await appWindow.hide();
+    }
+
+    function handleKeydown(event: KeyboardEvent) {
+        if (event.key === "Escape") {
+            closePopover();
+            return;
+        }
+
+        if (
+            (event.metaKey || event.ctrlKey) &&
+            event.key.toLowerCase() === "f"
+        ) {
+            event.preventDefault();
+            searchInput?.focus();
+            searchInput?.select();
+        }
+    }
+
+    function onSearchInput(event: Event) {
+        searchText = (event.target as HTMLInputElement).value;
+        applyFilter();
+    }
+
+    function getRelativeTime(timestamp: number): string {
+        const seconds = Math.max(
+            0,
+            Math.floor((Date.now() - timestamp) / 1000),
+        );
+        if (seconds < 60) return "Just now";
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h`;
+        const days = Math.floor(hours / 24);
+        return `${days}d`;
+    }
+
+    function getTypeLabel(type: string): string {
+        return type === "url" ? "URL" : "Text";
+    }
 </script>
 
-<main>
-  {#if showSettings}
-    <Settings
-      {historyLimit}
-      on:setLimit={(e) => {
-        historyLimit = e.detail;
-        invoke('set_history_limit', { limit: historyLimit });
-      }}
-      on:close={handleCloseSettings}
-    />
-  {:else}
-    <div class="container">
-      <SearchBar
-        {searchText}
-        bind:inputRef={searchInputRef}
-        on:input={handleSearchInput}
-        on:clear={() => { searchText = ''; applyFilter(); }}
-      />
-
-      <div class="divider"></div>
-
-      <div class="scroll-area">
-        {#if filteredItems.length === 0}
-          <div class="empty-state">
-            <div class="empty-icon">􀉞</div>
-            <p class="empty-title">No clipboard history</p>
-            <p class="empty-sub">Copy something to get started</p>
-          </div>
-        {:else}
-          {#each filteredItems as item (item.id)}
-            <ClipItemRow
-              {item}
-              onCopy={() => handleCopy(item)}
-              onDelete={() => handleDelete(item)}
-            />
-          {/each}
-        {/if}
-      </div>
-
-      <div class="divider"></div>
-
-      <footer>
+<main class="panel" role="application" aria-label="ClipStack Clipboard Menu">
+    <header class="toolbar">
+        <div class="title-area">
+            <h1>ClipStack</h1>
+            <p>{allItems.length} items</p>
+        </div>
         <button
-          class="footer-btn danger"
-          on:click={handleClearAll}
-          disabled={clipItems.length === 0}
-          title="Clear all history"
+            class="close-button"
+            type="button"
+            on:click={closePopover}
+            aria-label="Close popup"
         >
-          Clear All
+            ×
         </button>
-        <button class="footer-btn accent" on:click={toggleSettings} title="Settings">
-          Settings
-        </button>
-      </footer>
+    </header>
+
+    <div class="search-row">
+        <input
+            bind:this={searchInput}
+            type="text"
+            value={searchText}
+            placeholder="Search clipboard"
+            aria-label="Search clipboard history"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            on:input={onSearchInput}
+        />
+        {#if searchText.trim().length > 0}
+            <button
+                class="clear-search"
+                type="button"
+                on:click={() => {
+                    searchText = "";
+                    applyFilter();
+                    searchInput?.focus();
+                }}
+                aria-label="Clear search"
+            >
+                Clear
+            </button>
+        {/if}
     </div>
-  {/if}
+
+    <section class="list" role="list">
+        {#if filteredItems.length === 0}
+            <div class="empty-state">
+                <p class="empty-title">No clipboard history</p>
+                <p class="empty-subtitle">Copy text and it will appear here.</p>
+            </div>
+        {:else}
+            {#each filteredItems as item (item.id)}
+                <article class="item" role="listitem">
+                    <button
+                        class="item-copy"
+                        type="button"
+                        on:click={() => handleCopy(item)}
+                        aria-label={`Copy ${item.content.substring(0, 80)}`}
+                    >
+                        <p class="item-text">{item.content}</p>
+                        <p class="item-meta">
+                            {getTypeLabel(item.content_type)} · {getRelativeTime(
+                                item.created_at,
+                            )}
+                        </p>
+                    </button>
+                    <button
+                        class="item-delete"
+                        type="button"
+                        on:click={() => handleDelete(item)}
+                        aria-label="Delete item"
+                    >
+                        ×
+                    </button>
+                </article>
+            {/each}
+        {/if}
+    </section>
+
+    <footer class="footer">
+        <button
+            class="clear-all"
+            type="button"
+            disabled={allItems.length === 0}
+            on:click={handleClearAll}
+        >
+            Clear All
+        </button>
+        <span>Esc closes</span>
+    </footer>
 </main>
 
 <style>
-  :global(html) {
-    height: 100%;
-  }
-
-  :global(body) {
-    margin: 0;
-    padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
-    background: transparent;
-    overflow: hidden;
-    height: 100%;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  main {
-    background: rgba(246, 246, 246, 0.82);
-    backdrop-filter: blur(40px) saturate(180%);
-    -webkit-backdrop-filter: blur(40px) saturate(180%);
-    border-radius: 14px;
-    border: 0.5px solid rgba(0, 0, 0, 0.14);
-    box-shadow:
-      0 0 0 0.5px rgba(0, 0, 0, 0.08),
-      0 4px 24px rgba(0, 0, 0, 0.16),
-      0 1px 3px rgba(0, 0, 0, 0.12);
-    overflow: hidden;
-    animation: popIn 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  :global(html.dark) main {
-    background: rgba(28, 28, 28, 0.82);
-    border-color: rgba(255, 255, 255, 0.1);
-    box-shadow:
-      0 0 0 0.5px rgba(255, 255, 255, 0.06),
-      0 4px 24px rgba(0, 0, 0, 0.5),
-      0 1px 3px rgba(0, 0, 0, 0.3);
-  }
-
-  @keyframes popIn {
-    from {
-      opacity: 0;
-      transform: scale(0.96) translateY(-4px);
+    :global(html),
+    :global(body) {
+        margin: 0;
+        padding: 0;
+        height: 100%;
     }
-    to {
-      opacity: 1;
-      transform: scale(1) translateY(0);
+
+    :global(body) {
+        background: transparent;
+        font-family:
+            "SF Pro Text",
+            -apple-system,
+            BlinkMacSystemFont,
+            "Helvetica Neue",
+            sans-serif;
+        -webkit-font-smoothing: antialiased;
+        overflow: hidden;
     }
-  }
 
-  .container {
-    width: 380px;
-    display: flex;
-    flex-direction: column;
-    max-height: 520px;
-  }
+    .panel {
+        width: 392px;
+        max-height: 540px;
+        display: flex;
+        flex-direction: column;
+        background: rgba(246, 246, 246, 0.88);
+        backdrop-filter: blur(42px) saturate(170%);
+        -webkit-backdrop-filter: blur(42px) saturate(170%);
+        border-radius: 14px;
+        border: 0.5px solid rgba(0, 0, 0, 0.12);
+        box-shadow:
+            0 1px 1px rgba(0, 0, 0, 0.14),
+            0 14px 40px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        animation: open 0.16s ease-out;
+    }
 
-  .divider {
-    height: 1px;
-    background: rgba(0, 0, 0, 0.08);
-    flex-shrink: 0;
-  }
+    :global(html.dark) .panel {
+        background: rgba(34, 34, 34, 0.86);
+        border-color: rgba(255, 255, 255, 0.1);
+        box-shadow:
+            0 1px 1px rgba(0, 0, 0, 0.32),
+            0 14px 42px rgba(0, 0, 0, 0.52);
+    }
 
-  :global(html.dark) .divider {
-    background: rgba(255, 255, 255, 0.08);
-  }
+    @keyframes open {
+        from {
+            opacity: 0;
+            transform: translateY(-6px) scale(0.985);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
 
-  .scroll-area {
-    flex: 1;
-    overflow-y: auto;
-    max-height: 408px;
-    overscroll-behavior: contain;
-  }
+    .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px 8px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
 
-  .scroll-area::-webkit-scrollbar {
-    width: 4px;
-  }
+    :global(html.dark) .toolbar {
+        border-bottom-color: rgba(255, 255, 255, 0.08);
+    }
 
-  .scroll-area::-webkit-scrollbar-track {
-    background: transparent;
-  }
+    .title-area h1 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: rgba(0, 0, 0, 0.82);
+        line-height: 1.1;
+    }
 
-  .scroll-area::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.15);
-    border-radius: 4px;
-  }
+    .title-area p {
+        margin: 2px 0 0;
+        font-size: 11px;
+        color: rgba(0, 0, 0, 0.42);
+    }
 
-  :global(html.dark) .scroll-area::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-  }
+    :global(html.dark) .title-area h1 {
+        color: rgba(255, 255, 255, 0.9);
+    }
 
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 48px 20px;
-    text-align: center;
-    gap: 4px;
-  }
+    :global(html.dark) .title-area p {
+        color: rgba(255, 255, 255, 0.42);
+    }
 
-  .empty-icon {
-    font-size: 36px;
-    opacity: 0.25;
-    margin-bottom: 8px;
-    line-height: 1;
-  }
+    .close-button {
+        border: none;
+        background: rgba(0, 0, 0, 0.08);
+        color: rgba(0, 0, 0, 0.56);
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        font-size: 16px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0;
+    }
 
-  .empty-title {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 500;
-    color: rgba(0, 0, 0, 0.55);
-    letter-spacing: -0.1px;
-  }
+    .close-button:hover {
+        background: rgba(0, 0, 0, 0.14);
+    }
 
-  :global(html.dark) .empty-title {
-    color: rgba(255, 255, 255, 0.45);
-  }
+    :global(html.dark) .close-button {
+        background: rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.7);
+    }
 
-  .empty-sub {
-    margin: 0;
-    font-size: 12px;
-    color: rgba(0, 0, 0, 0.35);
-  }
+    :global(html.dark) .close-button:hover {
+        background: rgba(255, 255, 255, 0.18);
+    }
 
-  :global(html.dark) .empty-sub {
-    color: rgba(255, 255, 255, 0.28);
-  }
+    .search-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
 
-  footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 12px;
-    background: rgba(0, 0, 0, 0.02);
-    flex-shrink: 0;
-  }
+    :global(html.dark) .search-row {
+        border-bottom-color: rgba(255, 255, 255, 0.08);
+    }
 
-  :global(html.dark) footer {
-    background: rgba(255, 255, 255, 0.02);
-  }
+    .search-row input {
+        flex: 1;
+        min-width: 0;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 10px;
+        padding: 7px 10px;
+        font-size: 13px;
+        background: rgba(255, 255, 255, 0.84);
+        color: rgba(0, 0, 0, 0.86);
+        outline: none;
+    }
 
-  .footer-btn {
-    background: none;
-    border: none;
-    padding: 5px 10px;
-    font-size: 12px;
-    font-weight: 450;
-    cursor: pointer;
-    border-radius: 6px;
-    color: rgba(0, 0, 0, 0.45);
-    transition: background-color 0.12s, color 0.12s;
-    letter-spacing: -0.1px;
-    font-family: inherit;
-    -webkit-font-smoothing: antialiased;
-  }
+    .search-row input:focus {
+        border-color: rgba(0, 122, 255, 0.55);
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.16);
+    }
 
-  .footer-btn:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.06);
-    color: rgba(0, 0, 0, 0.7);
-  }
+    :global(html.dark) .search-row input {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.14);
+        color: rgba(255, 255, 255, 0.9);
+    }
 
-  :global(html.dark) .footer-btn {
-    color: rgba(255, 255, 255, 0.35);
-  }
+    :global(html.dark) .search-row input:focus {
+        border-color: rgba(10, 132, 255, 0.65);
+        box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.22);
+    }
 
-  :global(html.dark) .footer-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.65);
-  }
+    .clear-search {
+        border: none;
+        background: transparent;
+        color: #007aff;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0;
+    }
 
-  .footer-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
+    :global(html.dark) .clear-search {
+        color: #0a84ff;
+    }
 
-  .footer-btn.accent {
-    color: #007aff;
-  }
+    .list {
+        flex: 1;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        max-height: 420px;
+    }
 
-  .footer-btn.accent:hover {
-    background: rgba(0, 122, 255, 0.08);
-    color: #0062cc;
-  }
+    .list::-webkit-scrollbar {
+        width: 6px;
+    }
 
-  :global(html.dark) .footer-btn.accent {
-    color: #0a84ff;
-  }
+    .list::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.18);
+        border-radius: 6px;
+    }
 
-  :global(html.dark) .footer-btn.accent:hover {
-    background: rgba(10, 132, 255, 0.12);
-    color: #409cff;
-  }
+    :global(html.dark) .list::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+    }
 
-  .footer-btn.danger:hover:not(:disabled) {
-    color: #ff3b30;
-    background: rgba(255, 59, 48, 0.07);
-  }
+    .empty-state {
+        padding: 54px 18px;
+        text-align: center;
+    }
 
-  :global(html.dark) .footer-btn.danger:hover:not(:disabled) {
-    color: #ff453a;
-    background: rgba(255, 69, 58, 0.1);
-  }
+    .empty-title {
+        margin: 0;
+        color: rgba(0, 0, 0, 0.62);
+        font-size: 14px;
+        font-weight: 520;
+    }
+
+    .empty-subtitle {
+        margin: 6px 0 0;
+        color: rgba(0, 0, 0, 0.38);
+        font-size: 12px;
+    }
+
+    :global(html.dark) .empty-title {
+        color: rgba(255, 255, 255, 0.64);
+    }
+
+    :global(html.dark) .empty-subtitle {
+        color: rgba(255, 255, 255, 0.36);
+    }
+
+    .item {
+        display: flex;
+        align-items: stretch;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    :global(html.dark) .item {
+        border-bottom-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .item-copy {
+        flex: 1;
+        min-width: 0;
+        border: none;
+        background: transparent;
+        text-align: left;
+        cursor: pointer;
+        padding: 10px 12px;
+    }
+
+    .item-copy:hover {
+        background: rgba(0, 0, 0, 0.04);
+    }
+
+    :global(html.dark) .item-copy:hover {
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .item-text {
+        margin: 0;
+        color: rgba(0, 0, 0, 0.84);
+        font-size: 13px;
+        line-height: 1.35;
+        display: -webkit-box;
+        line-clamp: 2;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        word-break: break-word;
+    }
+
+    :global(html.dark) .item-text {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .item-meta {
+        margin: 4px 0 0;
+        color: rgba(0, 0, 0, 0.44);
+        font-size: 11px;
+    }
+
+    :global(html.dark) .item-meta {
+        color: rgba(255, 255, 255, 0.42);
+    }
+
+    .item-delete {
+        width: 32px;
+        border: none;
+        background: transparent;
+        color: rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+        font-size: 15px;
+        line-height: 1;
+        padding: 0;
+    }
+
+    .item-delete:hover {
+        color: #ff3b30;
+        background: rgba(255, 59, 48, 0.08);
+    }
+
+    :global(html.dark) .item-delete {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    :global(html.dark) .item-delete:hover {
+        color: #ff453a;
+        background: rgba(255, 69, 58, 0.15);
+    }
+
+    .footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 9px 12px;
+        border-top: 1px solid rgba(0, 0, 0, 0.07);
+        background: rgba(0, 0, 0, 0.02);
+    }
+
+    :global(html.dark) .footer {
+        border-top-color: rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .clear-all {
+        border: none;
+        border-radius: 8px;
+        background: rgba(255, 59, 48, 0.09);
+        color: #d70015;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 10px;
+        cursor: pointer;
+    }
+
+    .clear-all:disabled {
+        opacity: 0.4;
+        cursor: default;
+    }
+
+    .clear-all:not(:disabled):hover {
+        background: rgba(255, 59, 48, 0.16);
+    }
+
+    :global(html.dark) .clear-all {
+        background: rgba(255, 69, 58, 0.18);
+        color: #ff8d86;
+    }
+
+    .footer span {
+        color: rgba(0, 0, 0, 0.4);
+        font-size: 11px;
+    }
+
+    :global(html.dark) .footer span {
+        color: rgba(255, 255, 255, 0.38);
+    }
 </style>

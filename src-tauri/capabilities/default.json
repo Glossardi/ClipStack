@@ -6,8 +6,8 @@
   "permissions": [
     "core:default",
     "opener:default",
-    "shell:default",
     "core:window:allow-show",
+    "core:window:allow-hide",
     "core:window:allow-set-focus",
     "core:window:allow-close"
   ]

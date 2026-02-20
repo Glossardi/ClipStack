@@ -11,17 +11,17 @@
   },
   "app": {
     "withGlobalTauri": true,
-    "macosPrivateApi": true,
+    "macOSPrivateApi": true,
     "windows": [
       {
         "title": "ClipStack",
-        "width": 380,
-        "height": 520,
+        "width": 392,
+        "height": 540,
         "resizable": false,
         "fullscreen": false,
         "decorations": false,
         "transparent": true,
-        "alwaysOnTop": false,
+        "alwaysOnTop": true,
         "skipTaskbar": true,
         "center": false,
         "visible": false
@@ -52,11 +52,6 @@
       "frameworks": [],
       "providerShortName": null,
       "signingIdentity": null
-    }
-  },
-  "plugins": {
-    "shell": {
-      "open": true
     }
   }
 }
