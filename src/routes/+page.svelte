@@ -3,6 +3,7 @@
     import { invoke } from "@tauri-apps/api/core";
     import { listen } from "@tauri-apps/api/event";
     import { getCurrentWindow } from "@tauri-apps/api/window";
+    import { checkForUpdatesOnStartup } from "$lib/updater.js";
 
     interface ClipItem {
         id: string;
@@ -28,6 +29,7 @@
 
     onMount(async () => {
         applyColorScheme();
+        void checkForUpdatesOnStartup();
 
         const media = window.matchMedia("(prefers-color-scheme: dark)");
         darkModeListener = () => applyColorScheme();

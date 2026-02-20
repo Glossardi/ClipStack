@@ -1,0 +1,120 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  version_check:
+    runs-on: ubuntu-latest
+    outputs:
+      release_needed: ${{ steps.version.outputs.release_needed }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect version bump
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          current_version="$(sed -nE 's/^version = "([^"]+)"/\1/p' src-tauri/Cargo.toml | head -n1)"
+          if [[ -z "${current_version}" ]]; then
+            echo "Could not parse version from src-tauri/Cargo.toml" >&2
+            exit 1
+          fi
+
+          previous_version=""
+          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+            previous_version="$(git show HEAD~1:src-tauri/Cargo.toml 2>/dev/null | sed -nE 's/^version = "([^"]+)"/\1/p' | head -n1 || true)"
+          fi
+
+          if [[ -n "${previous_version}" && "${previous_version}" == "${current_version}" ]]; then
+            echo "release_needed=false" >> "${GITHUB_OUTPUT}"
+          else
+            echo "release_needed=true" >> "${GITHUB_OUTPUT}"
+          fi
+
+          echo "version=${current_version}" >> "${GITHUB_OUTPUT}"
+          echo "Current version: ${current_version}"
+          echo "Previous version: ${previous_version:-<none>}"
+
+  test:
+    needs: version_check
+    if: needs.version_check.outputs.release_needed == 'true'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Rust tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Run Rust clippy
+        run: cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
+
+      - name: Run frontend tests when available
+        shell: bash
+        run: |
+          set -euo pipefail
+          if node -e "const p=require('./package.json'); process.exit(p.scripts && p.scripts.test ? 0 : 1)"; then
+            npm run test
+          else
+            echo "No npm test script found, skipping."
+          fi
+
+  release:
+    needs:
+      - version_check
+      - test
+    if: needs.version_check.outputs.release_needed == 'true'
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: --target aarch64-apple-darwin
+          - platform: macos-latest
+            args: --target x86_64-apple-darwin
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Install dependencies
+        run: npm install
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: v__VERSION__
+          releaseName: v__VERSION__
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
