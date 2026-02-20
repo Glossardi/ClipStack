@@ -15,6 +15,10 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ### Added
 - Persistent clipboard history (`clipboard_history.json`) with load-on-start and save-on-change.
+- Reliable outside-click close via macOS global mouse monitor for the tray panel.
+
+### Documentation
+- Updated README with app-only production build command for local install testing.
 
 ## [1.1.0] - 2026-02-20
 

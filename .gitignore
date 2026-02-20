@@ -31,3 +31,6 @@ build/
 
 # Cache
 tmp-npm-cache/
+
+# Local agent notes
+CLAUDE.md

@@ -39,6 +39,12 @@ cargo test -j 1 --manifest-path src-tauri/Cargo.toml
 npm run tauri build
 ```
 
+App-only bundle (recommended for local install testing):
+
+```bash
+npm run tauri build -- --bundles app
+```
+
 Build outputs:
 
 - `src-tauri/target/release/bundle/macos/ClipStack.app`
