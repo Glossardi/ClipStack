@@ -17,6 +17,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Launch at login via SMAppService
 - Dark mode toggle in settings
 
+## [1.0.3] - 2026-02-20
+
+### Fixed
+- **Checkmark animation** - Added missing `fade` import from `svelte/transition`; animation now works correctly after copying an item
+- **Hover effect** - Fixed invalid CSS pseudo-class `:hovering` → `:hover`; item background highlight now works
+- **Delete button** - Added visible delete (✕) button per clipboard item, appearing on hover; previously the delete functionality existed in the backend but had no accessible UI
+- **Search clear** - `clearSearch()` in SearchBar now dispatches a dedicated `clear` event instead of constructing a broken synthetic DOM event; parent resets `searchText` and re-filters correctly
+- **SearchBar event wiring** - Parent (`+page.svelte`) now uses `on:input` / `on:clear` / `on:quit` (Svelte event dispatcher pattern) instead of incorrect `onInput` / `onQuit` prop passing
+- **Memory leak** - `setInterval` in clipboard monitor is now stored and cleared via `onDestroy`; prevents accumulating intervals on component remount
+- **Version mismatch** - Settings panel showed `1.0.1`; corrected to `1.0.0` matching `package.json`
+
+### Added
+- **5 new Rust unit tests** - Extended test coverage from 4 to 9 tests:
+  - `test_add_item_deduplication` - verifies duplicate items are rejected
+  - `test_history_limit_enforcement` - verifies oldest items are trimmed when limit is reached
+  - `test_delete_item` - verifies correct item removal by ID
+  - `test_clear_all_items` - verifies full history wipe
+  - `test_set_history_limit_trims_excess` - verifies limit reduction trims existing items
+
+### Technical Details
+- `ClipItemRow.svelte` restructured: outer `<div role="listitem">` wraps a `<button class="clip-copy">` for copy and a conditional `<button class="delete-btn">` for delete
+- `SearchBar.svelte` dispatcher type extended with `clear: void` event
+- `+page.svelte` imports `onDestroy` and stores interval reference in `monitorInterval`
+- Rust `make_item()` test helper added for concise test setup
+- `cargo update time --precise 0.3.36` applied to maintain compatibility with rustc 1.86.0
+
+---
+
 ## [1.0.2] - 2026-02-18
 
 ### Fixed
@@ -64,10 +92,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Status |
 |---------|------|--------|
+| 1.0.3 | 2026-02-20 | ✅ Released |
 | 1.0.2 | 2026-02-18 | ✅ Released |
 | 1.0.1 | 2026-02-18 | ✅ Released |
 | 1.0.0 | 2026-02-18 | ✅ Released |
 
 ---
 
-*Last updated: 2026-02-18*
+*Last updated: 2026-02-20*

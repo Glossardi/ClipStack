@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { invoke } from '@tauri-apps/api/core';
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import { listen } from '@tauri-apps/api/event';
@@ -39,10 +39,12 @@
     applyFilter();
   }
 
-  async function startClipboardMonitoring() {
+  let monitorInterval: ReturnType<typeof setInterval> | null = null;
+
+  function startClipboardMonitoring() {
     let lastClipboard = '';
 
-    setInterval(async () => {
+    monitorInterval = setInterval(async () => {
       try {
         const current = await invoke<string>('get_from_clipboard');
         if (current && current !== lastClipboard && current.trim().length > 0) {
@@ -55,6 +57,12 @@
       }
     }, 500);
   }
+
+  onDestroy(() => {
+    if (monitorInterval !== null) {
+      clearInterval(monitorInterval);
+    }
+  });
 
   function applyFilter() {
     if (searchText.trim() === '') {
@@ -118,8 +126,9 @@
     <div class="container">
       <SearchBar
         {searchText}
-        onInput={handleSearchInput}
-        onQuit={closeApp}
+        on:input={handleSearchInput}
+        on:clear={() => { searchText = ''; applyFilter(); }}
+        on:quit={closeApp}
       />
 
       <div class="divider"></div>

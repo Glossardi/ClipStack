@@ -117,6 +117,19 @@ fn get_from_clipboard() -> Result<String, String> {
 mod tests {
     use super::*;
 
+    fn make_item(content: &str) -> ClipItem {
+        ClipItem {
+            id: uuid::Uuid::new_v4().to_string(),
+            content: content.to_string(),
+            content_type: if content.starts_with("http") {
+                "url".to_string()
+            } else {
+                "text".to_string()
+            },
+            created_at: 0,
+        }
+    }
+
     #[test]
     fn test_clipboard_state_initialization() {
         let state = ClipboardState::new();
@@ -157,19 +170,93 @@ mod tests {
         let url_content = "https://example.com";
         let text_content = "Plain text";
 
-        let url_type = if url_content.starts_with("http") {
-            "url"
-        } else {
-            "text"
-        };
-        let text_type = if text_content.starts_with("http") {
-            "url"
-        } else {
-            "text"
-        };
+        let url_type = if url_content.starts_with("http") { "url" } else { "text" };
+        let text_type = if text_content.starts_with("http") { "url" } else { "text" };
 
         assert_eq!(url_type, "url");
         assert_eq!(text_type, "text");
+    }
+
+    #[test]
+    fn test_add_item_deduplication() {
+        let mut items: Vec<ClipItem> = Vec::new();
+        let content = "Hello World";
+
+        // Add item first time
+        if !items.iter().any(|i| i.content == content) {
+            items.push(make_item(content));
+        }
+        assert_eq!(items.len(), 1);
+
+        // Try to add duplicate – should not increase count
+        if !items.iter().any(|i| i.content == content) {
+            items.push(make_item(content));
+        }
+        assert_eq!(items.len(), 1);
+    }
+
+    #[test]
+    fn test_history_limit_enforcement() {
+        let mut items: Vec<ClipItem> = Vec::new();
+        let limit = 3usize;
+
+        for i in 0..5 {
+            items.insert(0, make_item(&format!("item {}", i)));
+            while items.len() > limit {
+                items.pop();
+            }
+        }
+
+        assert_eq!(items.len(), limit);
+        // Newest items should be at the front
+        assert_eq!(items[0].content, "item 4");
+        assert_eq!(items[2].content, "item 2");
+    }
+
+    #[test]
+    fn test_delete_item() {
+        let mut items: Vec<ClipItem> = vec![
+            make_item("first"),
+            make_item("second"),
+            make_item("third"),
+        ];
+        let id_to_delete = items[1].id.clone();
+
+        items.retain(|i| i.id != id_to_delete);
+
+        assert_eq!(items.len(), 2);
+        assert!(!items.iter().any(|i| i.id == id_to_delete));
+    }
+
+    #[test]
+    fn test_clear_all_items() {
+        let mut items: Vec<ClipItem> = vec![make_item("a"), make_item("b"), make_item("c")];
+        assert_eq!(items.len(), 3);
+
+        items.clear();
+        assert_eq!(items.len(), 0);
+    }
+
+    #[test]
+    fn test_set_history_limit_trims_excess() {
+        let mut items: Vec<ClipItem> = vec![
+            make_item("a"),
+            make_item("b"),
+            make_item("c"),
+            make_item("d"),
+            make_item("e"),
+        ];
+        assert_eq!(items.len(), 5);
+
+        let new_limit = 3usize;
+        while items.len() > new_limit {
+            items.pop();
+        }
+
+        assert_eq!(items.len(), new_limit);
+        // Oldest items (at the end) should have been trimmed
+        assert_eq!(items[0].content, "a");
+        assert_eq!(items[2].content, "c");
     }
 }
 

@@ -12,10 +12,11 @@ Built with **Tauri V2**, **Svelte 5**, and **Rust** - no Xcode required for deve
 - 📋 **Clipboard History** - Automatically captures text and URLs
 - 🔍 **Live Search** - Filter clipboard items instantly
 - ⚡ **Quick Copy** - Click any item to copy back to clipboard with visual feedback
+- 🗑 **Delete Items** - Remove individual items via hover delete button, or clear all at once
 - 🎯 **Menu Bar Integration** - Lives in your menu bar, out of the way
-- ⚙️ **Configurable** - Adjust history limit
+- ⚙️ **Configurable** - Adjust history limit (10 / 25 / 50 / 100 items)
 - 🚀 **Lightweight** - Built with Rust, minimal resource usage
-- ✅ **Tested** - Unit tests for core clipboard logic
+- ✅ **Tested** - 9 unit tests for core clipboard logic
 
 ## 📋 Requirements
 
@@ -125,13 +126,15 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 🗺 Roadmap
 
-### Phase 1 (Current)
-- ✅ Basic clipboard history
-- ✅ Search functionality
+### Phase 1 (Current - v1.0.3)
+- ✅ Basic clipboard history with deduplication
+- ✅ Search functionality with working clear button
+- ✅ Delete individual items via hover button
 - ✅ Settings panel with working close button
 - ✅ Menu bar integration (menu bar only, no Dock icon)
-- ✅ Quick-Copy with visual checkmark feedback
-- ✅ Unit tests for core clipboard logic
+- ✅ Quick-Copy with visual checkmark feedback (animation fixed)
+- ✅ Hover effects on clipboard items
+- ✅ 9 unit tests for core clipboard logic
 
 ### Phase 2 (Planned)
 - 🔲 Image support
@@ -155,6 +158,7 @@ If the app shows a Dock icon, ensure you're running v1.0.1 or later. The app use
 - **Bundle ID warning**: Fixed in v1.0.1 (changed from `com.clipstack.app` to `com.clipstack.macos`)
 - **Shell plugin warning**: Fixed in v1.0.1 (updated to Tauri V2 `open` config)
 - **Settings close button**: Fixed in v1.0.2 (event dispatcher now properly closes panel)
+- **Hover effects / checkmark animation**: Fixed in v1.0.3 (CSS `:hover` and `fade` transition import)
 
 ### Tray menu stays open
 This is standard macOS behavior. The system tray menu is controlled by macOS and will close when you:

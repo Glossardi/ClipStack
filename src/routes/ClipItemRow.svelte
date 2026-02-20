@@ -1,5 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
+  import { fade } from 'svelte/transition';
 
   export let item: {
     id: string;
@@ -7,6 +8,8 @@
     content_type: string;
     created_at: number;
   };
+  export let onCopy: () => void = () => {};
+  export let onDelete: () => void = () => {};
 
   const dispatch = createEventDispatcher<{
     copy: void;
@@ -50,60 +53,87 @@
 
   function handleCopy() {
     dispatch('copy');
+    onCopy();
     showCheckmark = true;
     setTimeout(() => {
       showCheckmark = false;
     }, 800);
   }
+
+  function handleDelete(e: MouseEvent) {
+    e.stopPropagation();
+    dispatch('delete');
+    onDelete();
+  }
 </script>
 
-<button
+<div
   class="clip-item"
   class:hovering={isHovering}
-  on:click={handleCopy}
   on:mouseenter={() => isHovering = true}
   on:mouseleave={() => isHovering = false}
-  aria-label={`Copy clipboard item: ${item.content.substring(0, 50)}`}
+  role="listitem"
 >
-  <div class="icon">{getIcon(item.content_type)}</div>
+  <button
+    class="clip-copy"
+    on:click={handleCopy}
+    aria-label={`Copy clipboard item: ${item.content.substring(0, 50)}`}
+  >
+    <div class="icon">{getIcon(item.content_type)}</div>
 
-  <div class="content">
-    <div class="text">{truncateContent(item.content)}</div>
-    <div class="meta">
-      <span>{getRelativeTime(item.created_at)}</span>
-      <span class="separator">•</span>
-      <span>{getContentTypeLabel(item.content_type)}</span>
+    <div class="content">
+      <div class="text">{truncateContent(item.content)}</div>
+      <div class="meta">
+        <span>{getRelativeTime(item.created_at)}</span>
+        <span class="separator">•</span>
+        <span>{getContentTypeLabel(item.content_type)}</span>
+      </div>
     </div>
-  </div>
+  </button>
 
   {#if showCheckmark}
     <div class="checkmark" transition:fade={{duration: 150}}>✓</div>
+  {:else if isHovering}
+    <button
+      class="delete-btn"
+      on:click={handleDelete}
+      aria-label="Delete clipboard item"
+      transition:fade={{duration: 100}}
+    >✕</button>
   {/if}
-</button>
+</div>
 
 <style>
   .clip-item {
+    display: flex;
+    align-items: center;
+    position: relative;
+    transition: background-color 0.15s ease;
+  }
+
+  .clip-item:hover,
+  .clip-item.hovering {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  :global(.dark) .clip-item:hover,
+  :global(.dark) .clip-item.hovering {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .clip-copy {
     display: flex;
     align-items: flex-start;
     gap: 10px;
     padding: 8px 10px;
     cursor: pointer;
-    transition: background-color 0.15s ease;
-    position: relative;
+    flex: 1;
+    min-width: 0;
     background: none;
     border: none;
-    width: 100%;
     text-align: left;
     font-family: inherit;
     font-size: inherit;
-  }
-
-  .clip-item:hovering {
-    background: rgba(0, 0, 0, 0.05);
-  }
-
-  :global(.dark) .clip-item:hovering {
-    background: rgba(255, 255, 255, 0.05);
   }
 
   .icon {
@@ -156,21 +186,30 @@
   }
 
   .checkmark {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
+    flex-shrink: 0;
+    padding-right: 12px;
     color: #34c759;
     font-size: 20px;
     font-weight: bold;
   }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-50%) scale(0.8); }
-    to { opacity: 1; transform: translateY(-50%) scale(1); }
+  .delete-btn {
+    flex-shrink: 0;
+    padding: 4px 12px 4px 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #999;
+    font-size: 14px;
+    border-radius: 4px;
+    transition: color 0.15s;
   }
 
-  .checkmark {
-    animation: fadeIn 0.15s ease-out;
+  .delete-btn:hover {
+    color: #ff3b30;
+  }
+
+  :global(.dark) .delete-btn:hover {
+    color: #ff453a;
   }
 </style>

@@ -9,7 +9,7 @@
   }>();
 
   const limits = [10, 25, 50, 100];
-  const version = '1.0.1';
+  const version = '1.0.0';
 
   function handleLimitChange(newLimit: number) {
     historyLimit = newLimit;

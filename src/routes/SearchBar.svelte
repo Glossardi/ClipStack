@@ -5,16 +5,18 @@
 
   const dispatch = createEventDispatcher<{
     input: Event;
+    clear: void;
     quit: void;
   }>();
 
   function handleInput(event: Event) {
+    searchText = (event.target as HTMLInputElement).value;
     dispatch('input', event);
   }
 
   function clearSearch() {
     searchText = '';
-    dispatch('input', new Event('input'));
+    dispatch('clear');
   }
 </script>
 
