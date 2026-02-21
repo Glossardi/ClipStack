@@ -32,6 +32,7 @@ build/
 # Cache
 tmp-npm-cache/
 web/tmp-npm-cache/
+dev-server.log
 
 # Local agent notes / private docs
 CLAUDE.md

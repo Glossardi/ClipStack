@@ -2,32 +2,26 @@
 
 Minimal macOS clipboard manager in the menu bar, built with Tauri v2 + Svelte + Rust.
 
-## Current Feature Set
+## Features
 
 - Menu bar popover with tray icon toggle
 - Clipboard text/URL capture in Rust backend
-- Persistent clipboard history on disk (survives restart/crash)
-- Event-driven UI updates on clipboard changes
-- Click-to-copy with lightweight "Copied" feedback
-- Per-item delete
-- Outside click / focus-loss close behavior
-- Escape closes popover
+- Persistent clipboard history on disk
+- Event-driven UI refresh on clipboard changes
+- Click-to-copy, delete per item, escape to close
 - Light/dark mode follows system
-
-## Project Structure (High-Level)
-
-- `src/routes/+page.svelte`: Main UI (menu bar popover)
-- `src/lib/clipboard.ts`: Shared types and time/type formatting
-- `src/lib/updater.js`: Updater flow wrapper
-- `src-tauri/src/lib.rs`: Native clipboard backend + tray behavior
-- `src-tauri/tauri.conf.json`: App config + updater endpoints
-- `src-tauri/capabilities/default.json`: Capability allowlist
 
 ## Requirements
 
 - macOS 14+
 - Node.js 18+
-- Rust toolchain (>= 1.88)
+- Rust toolchain >= 1.88
+
+If Homebrew Rust is preferred in your shell, run:
+
+```bash
+export PATH="$HOME/.cargo/bin:$PATH"
+```
 
 ## Development
 
@@ -36,76 +30,52 @@ npm install
 npm run tauri dev
 ```
 
-## Checks
+## Quality Checks
 
 ```bash
 npm run check
 npm run test
-cargo test -j 1 --manifest-path src-tauri/Cargo.toml
-cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
-```
-
-CI-parity preflight (empfohlen vor Push):
-
-```bash
 npm run ci:preflight
 ```
 
-## Production Build
+## Build
+
+App bundle:
 
 ```bash
-npm run tauri build
+npm run build:macos:app
 ```
 
-App-only bundle (recommended for local install testing):
-
-```bash
-npm run tauri build -- --bundles app
-```
-
-Distribution build (app + drag-and-drop DMG):
+DMG for distribution tests:
 
 ```bash
 npm run build:macos:dmg
 ```
 
-Build outputs:
+`build:macos:app`/`build:macos:dmg` disable updater artifacts for local testing, so no signing key is required.
+
+Outputs:
 
 - `src-tauri/target/release/bundle/macos/ClipStack.app`
 - `src-tauri/target/release/bundle/dmg/ClipStack_*.dmg`
 
-Run built app:
+## Release Flow (Single Source of Truth)
 
-```bash
-open src-tauri/target/release/bundle/macos/ClipStack.app
-```
+1. Run preflight: `npm run release:preflight`
+2. Bump version in all three files:
+   - `package.json`
+   - `src-tauri/Cargo.toml`
+   - `src-tauri/tauri.conf.json`
+3. Build and validate DMG: `npm run build:macos:dmg`
+4. Push to `main`: `git push origin main`
+5. GitHub Actions (`.github/workflows/release.yml`) creates signed artifacts and `latest.json`
 
-## Distribution Notes
+## Data & Privacy
 
-- The DMG contains `ClipStack.app` and an `Applications` shortcut for classic drag-and-drop install.
-- For broad distribution without Gatekeeper warnings, you should sign and notarize the app with an Apple Developer ID certificate.
-
-## Auto-Update & Release
-
-- Auto-updater is configured through GitHub Releases (`latest.json` + signed artifacts).
-- CI/CD workflow lives in `.github/workflows/release.yml`.
-- Full release instructions are documented in `RELEASING.md`.
-- For public end-user updates, release artifacts must be publicly reachable.
-
-## Data Storage
-
-Clipboard history is written to app data as JSON:
-
-- `<app_data_dir>/clipboard_history.json`
-
-On startup, ClipStack loads this file automatically.
-
-## Privacy
-
-- All clipboard data stays local on your Mac.
-- No telemetry, analytics, or network sync.
-- CSP is enabled in Tauri config and frontend uses module imports (no global `window.__TAURI__`).
+- Clipboard history file: `<app_data_dir>/clipboard_history.json`
+- Data remains local on device (no telemetry/sync)
+- CSP is enabled and frontend uses module imports (no global `window.__TAURI__`)
 
 ## License
 
-MIT
+Source-available under `LICENSE` (non-commercial for third parties; commercial use reserved to the licensor).

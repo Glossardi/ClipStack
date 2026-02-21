@@ -23,7 +23,7 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 - Tauri updater integration with startup check, download/install, and relaunch flow.
 - Updater permissions in Tauri capabilities (`updater:default`, `process:default`).
 - Signed multi-arch release pipeline (Intel + Apple Silicon) with `latest.json` artifacts.
-- Release runbook in `RELEASING.md` and `web/README.md` placeholder for future website deployment.
+- Release runbook consolidated in `README.md` as the single source of truth.
 
 ### Fixed
 - Outside-click close behavior on macOS panel flow (focus-loss driven close path stabilized).

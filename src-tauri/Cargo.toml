@@ -5,6 +5,7 @@ description = "A minimalist macOS clipboard manager"
 authors = ["Simon"]
 edition = "2021"
 rust-version = "1.88"
+license-file = "../LICENSE"
 
 [lib]
 name = "clipstack_lib"
