@@ -5,6 +5,7 @@ Release-Branch ist `main`.
 1. Feature fertig entwickeln.
 2. Lokal immer zuerst Preflight ausfuehren:
    - `npm run release:preflight`
+   - Rust Toolchain: `rustc --version` sollte mindestens `1.88` sein
 3. Version in allen drei Dateien hochzaehlen:
    - `src-tauri/Cargo.toml`
    - `src-tauri/tauri.conf.json`

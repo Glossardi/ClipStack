@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-check
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -47,6 +47,7 @@ test("runUpdateFlow skips install when no update is available", async () => {
 });
 
 test("runUpdateFlow logs and returns failed when check throws", async () => {
+  /** @type {string[]} */
   const errors = [];
 
   const result = await runUpdateFlow({

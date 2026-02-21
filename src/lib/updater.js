@@ -1,8 +1,33 @@
-// @ts-nocheck
+// @ts-check
+
+/**
+ * @typedef {Object} UpdatePayload
+ * @property {boolean | undefined} [available]
+ * @property {() => Promise<void>} downloadAndInstall
+ */
+
+/**
+ * @typedef {Object} UpdateDeps
+ * @property {() => Promise<UpdatePayload | null | undefined>} check
+ * @property {() => Promise<void>} relaunch
+ * @property {{ error: (...args: unknown[]) => void }} [logger]
+ */
+
+/**
+ * @typedef {"up-to-date" | "updated" | "failed"} UpdateFlowResult
+ */
+
+/**
+ * @typedef {UpdateFlowResult | "skipped"} StartupUpdateResult
+ */
 
 let hasCheckedAtStartup = false;
+/** @type {Promise<UpdateFlowResult> | null} */
 let inFlightCheck = null;
 
+/**
+ * @param {UpdatePayload | null | undefined} update
+ */
 function hasUpdate(update) {
   if (!update) {
     return false;
@@ -15,10 +40,14 @@ function hasUpdate(update) {
   return true;
 }
 
+/**
+ * @param {UpdateDeps} deps
+ * @returns {Promise<UpdateFlowResult>}
+ */
 export async function runUpdateFlow({ check, relaunch, logger = console }) {
   try {
     const update = await check();
-    if (!hasUpdate(update)) {
+    if (!update || !hasUpdate(update)) {
       return "up-to-date";
     }
 
@@ -31,6 +60,9 @@ export async function runUpdateFlow({ check, relaunch, logger = console }) {
   }
 }
 
+/**
+ * @returns {Promise<UpdateDeps>}
+ */
 async function resolveUpdaterDeps() {
   const [{ check }, { relaunch }] = await Promise.all([
     import("@tauri-apps/plugin-updater"),
@@ -40,6 +72,10 @@ async function resolveUpdaterDeps() {
   return { check, relaunch, logger: console };
 }
 
+/**
+ * @param {UpdateDeps} [deps]
+ * @returns {Promise<StartupUpdateResult>}
+ */
 export async function checkForUpdatesOnStartup(deps) {
   if (inFlightCheck) {
     return inFlightCheck;
