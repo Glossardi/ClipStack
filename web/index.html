@@ -43,18 +43,18 @@
 </head>
 <body>
   <main class="page">
-    <section class="hero-card" aria-labelledby="hero-title">
-      <p class="eyebrow">macOS clipboard manager</p>
+    <section class="panel" aria-labelledby="hero-title">
+      <p class="eyebrow">macOS only</p>
       <img class="logo" src="assets/clipstack-logo.svg" alt="ClipStack logo">
       <h1 id="hero-title">Download ClipStack.</h1>
-      <p class="lead">ClipStack is a minimal clipboard history app for macOS. It is built for speed, keeps your data local, and lets you download the latest release directly.</p>
+      <p class="lead">Minimal clipboard history for macOS. Fast, private, and local-first.</p>
 
       <div class="download-grid">
-        <a id="download-arm" class="download-btn primary" href="https://github.com/Glossardi/ClipStack/releases/latest">
+        <a id="download-arm" class="download-btn primary" href="https://github.com/Glossardi/ClipStack/releases/latest" aria-label="Download ClipStack for Apple Silicon">
           <span>Download for Apple Silicon</span>
           <small id="arm-version">Latest version</small>
         </a>
-        <a id="download-intel" class="download-btn" href="https://github.com/Glossardi/ClipStack/releases/latest">
+        <a id="download-intel" class="download-btn" href="https://github.com/Glossardi/ClipStack/releases/latest" aria-label="Download ClipStack for Intel Mac">
           <span>Download for Intel</span>
           <small id="intel-version">Latest version</small>
         </a>
@@ -64,33 +64,32 @@
         <strong id="latest-version">Latest version</strong>
         <span id="latest-updated">Updated from GitHub releases</span>
       </p>
-    </section>
 
-    <section class="chips" aria-label="Core benefits">
-      <p>Privacy-first</p>
-      <p>Native performance</p>
-      <p>Local storage only</p>
-      <p>Open source</p>
-      <p>Menu bar workflow</p>
-    </section>
+      <section class="quick-facts" aria-label="Core benefits">
+        <p>Privacy-first</p>
+        <p>Native performance</p>
+        <p>Open source</p>
+        <p>No telemetry</p>
+      </section>
 
-    <section class="details" aria-label="ClipStack details">
-      <article>
-        <h2>Designed for focus</h2>
-        <p>ClipStack stays out of your way with a clean menu bar flow and instant keyboard navigation. It feels native on macOS and keeps your clipboard history easy to reach without clutter.</p>
-      </article>
-      <article>
-        <h2>Fast and local</h2>
-        <p>Built with Rust and Tauri, ClipStack is lightweight and responsive. Your clipboard history is stored locally on your Mac, with no telemetry and no cloud sync by default.</p>
-      </article>
+      <section class="details" aria-label="ClipStack details">
+        <article>
+          <h2>Designed for focus</h2>
+          <p>Menu bar workflow, keyboard-friendly actions, and a clean UI that stays out of your way.</p>
+        </article>
+        <article>
+          <h2>Blazing fast</h2>
+          <p>Rust + Tauri stack for near-instant interactions while keeping clipboard history on your Mac.</p>
+        </article>
+      </section>
     </section>
 
     <section class="faq" aria-labelledby="faq-title">
       <h2 id="faq-title">FAQ</h2>
       <h3>What is ClipStack?</h3>
-      <p>ClipStack is a free clipboard history manager for macOS. It captures copied text and links so you can quickly reuse previous items from a minimal menu bar interface.</p>
+      <p>ClipStack is a free clipboard history app for macOS that helps you quickly reuse copied text and links.</p>
       <h3>How do downloads work?</h3>
-      <p>The download buttons resolve the latest GitHub release automatically. If the API is unavailable, buttons fall back to the latest release page so users can still download immediately.</p>
+      <p>Buttons fetch the latest GitHub release automatically. If the API is unavailable, they fall back to the latest release page.</p>
     </section>
   </main>
 
