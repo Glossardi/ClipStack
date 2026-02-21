@@ -1,7 +1,6 @@
 import { selectLatestDmgAssets } from "./release-utils.js";
 
 const DEFAULT_CONFIG = {
-  siteUrl: "https://clipstack.click",
   githubRepo: "Glossardi/ClipStack",
   githubProjectUrl: "https://github.com/Glossardi/ClipStack",
 };
@@ -11,104 +10,77 @@ const config = {
   ...(window.__CLIPSTACK_CONFIG__ || {}),
 };
 
-async function loadLatestRelease() {
-  const armLabel = document.getElementById("arm-version");
-  const intelLabel = document.getElementById("intel-version");
+function setFallbackState() {
+  const releaseUrl = `${config.githubProjectUrl}/releases/latest`;
   const armLink = document.getElementById("download-arm");
   const intelLink = document.getElementById("download-intel");
+  const armLabel = document.getElementById("arm-version");
+  const intelLabel = document.getElementById("intel-version");
+  const latestVersion = document.getElementById("latest-version");
+  const latestUpdated = document.getElementById("latest-updated");
+
+  if (armLink) armLink.href = releaseUrl;
+  if (intelLink) intelLink.href = releaseUrl;
+  if (armLabel) armLabel.textContent = "Latest version";
+  if (intelLabel) intelLabel.textContent = "Latest version";
+  if (latestVersion) latestVersion.textContent = "Latest version";
+  if (latestUpdated) latestUpdated.textContent = "Open release page fallback";
+}
+
+async function fetchLatestRelease() {
+  const armLink = document.getElementById("download-arm");
+  const intelLink = document.getElementById("download-intel");
+  const armLabel = document.getElementById("arm-version");
+  const intelLabel = document.getElementById("intel-version");
+  const latestVersion = document.getElementById("latest-version");
+  const latestUpdated = document.getElementById("latest-updated");
 
   try {
-    const res = await fetch(
-      `https://api.github.com/repos/${config.githubRepo}/releases/latest`
+    const response = await fetch(
+      `https://api.github.com/repos/${config.githubRepo}/releases/latest`,
+      {
+        headers: { Accept: "application/vnd.github+json" },
+      },
     );
 
-    if (!res.ok) {
-        throw new Error(`GitHub API Error: ${res.status}`);
+    if (!response.ok) {
+      throw new Error(`GitHub API error: ${response.status}`);
     }
 
-    const release = await res.json();
+    const release = await response.json();
     const version = (release.tag_name || "latest").replace(/^v/i, "");
+    const updatedAt = release.published_at
+      ? new Date(release.published_at).toISOString().slice(0, 10)
+      : null;
 
     const { armAsset, intelAsset } = selectLatestDmgAssets(release.assets || []);
+    const releaseUrl = `${config.githubProjectUrl}/releases/latest`;
 
-    if (armAsset?.browser_download_url) {
-        armLink.href = armAsset.browser_download_url;
-        if (armLabel) armLabel.textContent = `Latest stable: v${version}`;
-    } else {
-        if (armLabel) armLabel.textContent = "Download from GitHub";
-        armLink.href = `${config.githubProjectUrl}/releases/latest`;
+    if (armLink) {
+      armLink.href = armAsset?.browser_download_url || releaseUrl;
+    }
+    if (intelLink) {
+      intelLink.href = intelAsset?.browser_download_url || releaseUrl;
     }
 
-    if (intelAsset?.browser_download_url) {
-        intelLink.href = intelAsset.browser_download_url;
-        if (intelLabel) intelLabel.textContent = `Latest stable: v${version}`;
-    } else {
-        if (intelLabel) intelLabel.textContent = "Download from GitHub";
-        intelLink.href = `${config.githubProjectUrl}/releases/latest`;
+    if (armLabel) armLabel.textContent = `v${version}`;
+    if (intelLabel) intelLabel.textContent = `v${version}`;
+    if (latestVersion) latestVersion.textContent = `v${version}`;
+    if (latestUpdated) {
+      latestUpdated.textContent = updatedAt
+        ? `Published ${updatedAt}`
+        : "Latest release";
     }
   } catch (error) {
-    console.warn("Falling back to GitHub Release page due to API limit or error", error);
-    
-    // UI Feedback for error state
-    if (armLabel) armLabel.textContent = "Download from GitHub";
-    if (intelLabel) intelLabel.textContent = "Download from GitHub";
-    
-    // Direct link to latest release page as fallback
-    if (armLink) armLink.href = `${config.githubProjectUrl}/releases/latest`;
-    if (intelLink) intelLink.href = `${config.githubProjectUrl}/releases/latest`;
+    console.warn("Falling back to releases page:", error);
+    setFallbackState();
   }
 }
 
-function initReveal() {
-  const observerOptions = {
-    threshold: 0.1,
-    rootMargin: "0px 0px -50px 0px"
-  };
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("visible");
-        observer.unobserve(entry.target);
-      }
-    });
-  }, observerOptions);
-
-  document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
-}
-
-function hidePreload() {
-  const preload = document.getElementById("preload");
-  if (!preload) return;
-  setTimeout(() => {
-    preload.classList.add("hide");
-    setTimeout(() => preload.remove(), 600);
-  }, 400);
-}
-
 function init() {
-  loadLatestRelease();
-  initReveal();
-  hidePreload();
-  
-  const yearEl = document.getElementById("year");
-  if (yearEl) yearEl.textContent = new Date().getFullYear();
-  
-  // Smooth scroll
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-      const href = this.getAttribute('href');
-      if (href === "#") return;
-      
-      e.preventDefault();
-      const target = document.querySelector(href);
-      if (target) {
-        target.scrollIntoView({
-          behavior: 'smooth'
-        });
-      }
-    });
-  });
+  fetchLatestRelease();
+  const year = document.getElementById("year");
+  if (year) year.textContent = String(new Date().getFullYear());
 }
 
 if (document.readyState === "loading") {
