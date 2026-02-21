@@ -1,0 +1,344 @@
+:root {
+  --bg: #ffffff;
+  --text: #000000;
+  --text-dim: #86868b;
+  --accent: #0071e3;
+  --macos-bg: #f5f5f7;
+  --macos-border: #d2d2d7;
+  --macos-btn: #ffffff;
+  --macos-btn-hover: #fcfcfd;
+  --radius: 12px;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --text: #f5f5f7;
+    --text-dim: #86868b;
+    --accent: #0a84ff;
+    --macos-bg: #1d1d1f;
+    --macos-border: #424245;
+    --macos-btn: #2d2d2f;
+    --macos-btn-hover: #3d3d3f;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Preload */
+#preload {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s var(--ease), visibility 0.5s var(--ease);
+}
+
+#preload.hide {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--macos-border);
+  border-top-color: var(--text);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Hero */
+.hero {
+  min-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 100px 20px 40px;
+}
+
+.hero-app-icon {
+  width: 120px;
+  height: 120px;
+  border-radius: 28px;
+  margin-bottom: 40px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  transition: transform 0.6s var(--ease);
+}
+
+.hero-app-icon:hover {
+  transform: scale(1.05) translateY(-5px);
+}
+
+.hero-app-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+h1 {
+  font-size: 80px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  margin-bottom: 10px;
+  background: linear-gradient(to bottom, var(--text) 60%, var(--text-dim));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+  font-size: 24px;
+  color: var(--text-dim);
+  max-width: 600px;
+  margin: 0 auto 50px;
+  font-weight: 400;
+}
+
+/* MacOS Buttons */
+.download-options {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.macos-btn {
+  background: var(--macos-btn);
+  border: 1px solid var(--macos-border);
+  border-radius: 10px;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 240px;
+  text-align: left;
+  transition: all 0.2s var(--ease);
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.macos-btn:hover {
+  background: var(--macos-btn-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.macos-btn .icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.8;
+  filter: invert(var(--macos-icon-invert, 0));
+}
+
+@media (prefers-color-scheme: dark) {
+    :root { --macos-icon-invert: 1; }
+}
+
+.macos-btn .btn-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.macos-btn .title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.macos-btn .version {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* OSS Badge */
+.oss-badge {
+  margin-top: 20px;
+}
+
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-dim);
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  transition: all 0.3s var(--ease);
+}
+
+.github-link:hover {
+  color: var(--text);
+  background: var(--macos-bg);
+  border-color: var(--macos-border);
+}
+
+.github-link .icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.6;
+  filter: invert(var(--macos-icon-invert, 0));
+}
+
+/* Marquee Features */
+.marquee-wrapper {
+  overflow: hidden;
+  padding: 60px 0;
+  position: relative;
+  background: var(--macos-bg);
+  margin: 40px 0;
+  user-select: none;
+}
+
+.marquee-wrapper::before,
+.marquee-wrapper::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 150px;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.marquee-wrapper::before {
+  left: 0;
+  background: linear-gradient(to right, var(--macos-bg), transparent);
+}
+
+.marquee-wrapper::after {
+  right: 0;
+  background: linear-gradient(to left, var(--macos-bg), transparent);
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+  gap: 40px;
+  padding-left: 40px;
+}
+
+.marquee-track:hover {
+    animation-play-state: paused;
+}
+
+.feature-card {
+  background: var(--bg);
+  padding: 30px;
+  border-radius: 16px;
+  width: 320px;
+  border: 1px solid var(--macos-border);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+}
+
+.feature-card h3 {
+  font-size: 19px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.feature-card p {
+  font-size: 15px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
+/* Features Grid (2 columns) */
+.features-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  max-width: 900px;
+  margin: 100px auto;
+  padding: 0 40px;
+}
+
+.feature-item {
+  text-align: left;
+}
+
+.feature-item h3 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.feature-item p {
+  color: var(--text-dim);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+/* Footer */
+footer {
+  padding: 100px 40px 40px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.footer-links {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.footer-links a:hover {
+  color: var(--text);
+}
+
+/* Animations */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 1.2s var(--ease);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  h1 { font-size: 48px; }
+  .subtitle { font-size: 18px; }
+  .hero-app-icon { width: 80px; height: 80px; border-radius: 20px; }
+  .features-grid { grid-template-columns: 1fr; gap: 40px; }
+  .feature-card { width: 280px; }
+}

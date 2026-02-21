@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClipStack — Clipboard history for macOS</title>
+    <link rel="stylesheet" href="styles.css">
+    <script async defer src="https://analytics.glossardi.de/script.js" data-website-id="c230ce3d-9704-46bc-9e3d-ae3bb1f35633"></script>
+</head>
+<body>
+    <div id="preload">
+        <div class="spinner"></div>
+    </div>
+
+    <main>
+        <section class="hero">
+            <div class="hero-app-icon reveal">
+                <img src="assets/clipstack-logo.svg" alt="ClipStack App Icon">
+            </div>
+            
+            <div class="hero-content">
+                <h1 class="reveal">ClipStack</h1>
+                <p class="subtitle reveal">Free & Open Source clipboard history for macOS. Built for speed, privacy, and minimalism.</p>
+                
+                <div class="download-options reveal">
+                    <a id="download-arm" href="https://github.com/Glossardi/ClipStack/releases" class="macos-btn">
+                        <img src="https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/apple.svg" class="icon" alt="Apple Silicon">
+                        <div class="btn-text">
+                            <span class="title">Apple Silicon</span>
+                            <span id="arm-version" class="version">Latest version</span>
+                        </div>
+                    </a>
+                    <a id="download-intel" href="https://github.com/Glossardi/ClipStack/releases" class="macos-btn">
+                        <img src="https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/apple.svg" class="icon" alt="Intel">
+                        <div class="btn-text">
+                            <span class="title">Intel Chip</span>
+                            <span id="intel-version" class="version">Latest version</span>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="oss-badge reveal">
+                    <a href="https://github.com/Glossardi/ClipStack" target="_blank" class="github-link">
+                        <img src="https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/github.svg" class="icon" alt="GitHub">
+                        <span>Open Source on GitHub</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section id="features-marquee" class="marquee-wrapper">
+            <div class="marquee-track">
+                <div class="feature-card">
+                    <h3>Privacy First</h3>
+                    <p>Your history stays on your Mac. No cloud, no tracking. Local storage only.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Lightweight</h3>
+                    <p>Native performance. Built with Rust and Tauri for maximum efficiency.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>100% Open Source</h3>
+                    <p>Fully transparent. Check the code, audit the builds, or contribute on GitHub.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Native UX</h3>
+                    <p>Feels like part of macOS. Minimalist menu bar interface that stays out of your way.</p>
+                </div>
+                <!-- Duplicate for seamless scroll -->
+                <div class="feature-card">
+                    <h3>Privacy First</h3>
+                    <p>Your history stays on your Mac. No cloud, no tracking. Local storage only.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Lightweight</h3>
+                    <p>Native performance. Built with Rust and Tauri for maximum efficiency.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>100% Open Source</h3>
+                    <p>Fully transparent. Check the code, audit the builds, or contribute on GitHub.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Native UX</h3>
+                    <p>Feels like part of macOS. Minimalist menu bar interface that stays out of your way.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="features-grid">
+            <div class="feature-item reveal">
+                <h3>Designed for Focus</h3>
+                <p>Minimalist interface that blends perfectly with macOS, staying accessible but out of sight.</p>
+            </div>
+            <div class="feature-item reveal">
+                <h3>Blazing Fast</h3>
+                <p>Built with Rust for near-instant search and interaction, even with thousands of entries.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-links">
+            <a href="https://github.com/Glossardi/ClipStack">GitHub</a>
+            <a href="https://github.com/Glossardi/ClipStack/issues">Issues</a>
+        </div>
+        <p>&copy; <span id="year"></span> ClipStack. Built for macOS.</p>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
