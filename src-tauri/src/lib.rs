@@ -11,8 +11,18 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Manager, State, WindowEvent,
+    AppHandle, Emitter, Manager, State, WindowEvent,
 };
+
+const CLIPBOARD_POLL_INTERVAL_MS: u64 = 350;
+const TRAY_HIDE_GUARD_DOWN_MS: u64 = 350;
+const TRAY_HIDE_GUARD_UP_MS: u64 = 320;
+const TRAY_CLICK_RESET_MS: u64 = 170;
+
+#[cfg(target_os = "macos")]
+const NS_PANEL_LEVEL: i64 = 25;
+#[cfg(target_os = "macos")]
+const NS_PANEL_COLLECTION_BEHAVIOR: u64 = 273;
 
 #[cfg(target_os = "macos")]
 use block::ConcreteBlock;
@@ -42,10 +52,11 @@ mod macos_panel {
             object_setClass(ns_window as *mut _, panel_class as *const _ as *const u8);
 
             // Keep panel above regular windows.
-            let _: () = msg_send![ns_window, setLevel: 25i64];
+            let _: () = msg_send![ns_window, setLevel: super::NS_PANEL_LEVEL];
 
             // Join all spaces and remain available in fullscreen contexts.
-            let _: () = msg_send![ns_window, setCollectionBehavior: 273u64];
+            let _: () =
+                msg_send![ns_window, setCollectionBehavior: super::NS_PANEL_COLLECTION_BEHAVIOR];
             let _: () = msg_send![ns_window, setHasShadow: NO];
 
             let _: () = msg_send![ns_window, orderOut: nil];
@@ -279,6 +290,18 @@ fn persist_items(state: &ClipboardState) -> Result<(), String> {
     persist_items_to_path(&path, &items)
 }
 
+fn clear_items(state: &ClipboardState) -> Result<(), String> {
+    state.items.lock().unwrap().clear();
+    *state.last_seen.lock().unwrap() = None;
+    persist_items(state)
+}
+
+fn emit_clipboard_updated(app_handle: &AppHandle) {
+    if let Err(err) = app_handle.emit("clipboard-updated", ()) {
+        eprintln!("failed to emit clipboard-updated event: {err}");
+    }
+}
+
 fn load_items_from_path(path: &Path) -> Result<Vec<ClipItem>, String> {
     if !path.exists() {
         return Ok(Vec::new());
@@ -292,7 +315,7 @@ fn load_items_from_path(path: &Path) -> Result<Vec<ClipItem>, String> {
     serde_json::from_slice::<Vec<ClipItem>>(&raw).map_err(|e| e.to_string())
 }
 
-fn start_clipboard_monitor(state: ClipboardState) {
+fn start_clipboard_monitor(state: ClipboardState, app_handle: AppHandle) {
     thread::spawn(move || {
         let mut clipboard = match Clipboard::new() {
             Ok(clipboard) => clipboard,
@@ -316,13 +339,17 @@ fn start_clipboard_monitor(state: ClipboardState) {
                     };
 
                     if should_capture {
-                        let _ = upsert_clip_item(&state, content);
-                        let _ = persist_items(&state);
+                        if upsert_clip_item(&state, content).is_some() {
+                            if let Err(err) = persist_items(&state) {
+                                eprintln!("failed to persist clipboard items: {err}");
+                            }
+                            emit_clipboard_updated(&app_handle);
+                        }
                     }
                 }
             }
 
-            thread::sleep(Duration::from_millis(350));
+            thread::sleep(Duration::from_millis(CLIPBOARD_POLL_INTERVAL_MS));
         }
     });
 }
@@ -333,7 +360,11 @@ fn get_clipboard_items(state: State<ClipboardState>) -> Vec<ClipItem> {
 }
 
 #[tauri::command]
-fn copy_to_clipboard(content: String, state: State<ClipboardState>) -> Result<(), String> {
+fn copy_to_clipboard(
+    content: String,
+    state: State<ClipboardState>,
+    app_handle: AppHandle,
+) -> Result<(), String> {
     let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
     clipboard
         .set_text(content.clone())
@@ -342,37 +373,54 @@ fn copy_to_clipboard(content: String, state: State<ClipboardState>) -> Result<()
     refresh_last_seen(state.inner(), &content);
     let _ = upsert_clip_item(state.inner(), content);
     persist_items(state.inner())?;
+    emit_clipboard_updated(&app_handle);
 
     Ok(())
 }
 
 #[tauri::command]
-fn add_clipboard_item(content: String, state: State<ClipboardState>) -> Result<ClipItem, String> {
+fn add_clipboard_item(
+    content: String,
+    state: State<ClipboardState>,
+    app_handle: AppHandle,
+) -> Result<ClipItem, String> {
     let item = upsert_clip_item(state.inner(), content)
         .ok_or_else(|| "Clipboard content is empty".to_string())?;
     persist_items(state.inner())?;
+    emit_clipboard_updated(&app_handle);
     Ok(item)
 }
 
 #[tauri::command]
-fn delete_clipboard_item(id: String, state: State<ClipboardState>) -> Result<(), String> {
+fn delete_clipboard_item(
+    id: String,
+    state: State<ClipboardState>,
+    app_handle: AppHandle,
+) -> Result<(), String> {
     let mut items = state.items.lock().unwrap();
     items.retain(|item| item.id != id);
     drop(items);
     persist_items(state.inner())?;
+    emit_clipboard_updated(&app_handle);
     Ok(())
 }
 
 #[tauri::command]
-fn clear_clipboard_items(state: State<ClipboardState>) -> Result<(), String> {
-    state.items.lock().unwrap().clear();
-    *state.last_seen.lock().unwrap() = None;
-    persist_items(state.inner())?;
+fn clear_clipboard_items(
+    state: State<ClipboardState>,
+    app_handle: AppHandle,
+) -> Result<(), String> {
+    clear_items(state.inner())?;
+    emit_clipboard_updated(&app_handle);
     Ok(())
 }
 
 #[tauri::command]
-fn set_history_limit(limit: usize, state: State<ClipboardState>) {
+fn set_history_limit(
+    limit: usize,
+    state: State<ClipboardState>,
+    app_handle: AppHandle,
+) -> Result<(), String> {
     let clamped_limit = limit.clamp(10, 500);
 
     *state.history_limit.lock().unwrap() = clamped_limit;
@@ -380,7 +428,9 @@ fn set_history_limit(limit: usize, state: State<ClipboardState>) {
     let mut items = state.items.lock().unwrap();
     trim_to_limit(&mut items, clamped_limit);
     drop(items);
-    let _ = persist_items(state.inner());
+    persist_items(state.inner())?;
+    emit_clipboard_updated(&app_handle);
+    Ok(())
 }
 
 #[tauri::command]
@@ -443,7 +493,6 @@ pub fn run() {
     let clipboard_state = ClipboardState::new();
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(clipboard_state.clone())
@@ -480,7 +529,7 @@ pub fn run() {
                 }
             }
 
-            start_clipboard_monitor(clipboard_state.clone());
+            start_clipboard_monitor(clipboard_state.clone(), app.handle().clone());
 
             #[cfg(target_os = "macos")]
             {
@@ -502,7 +551,9 @@ pub fn run() {
             let menu = Menu::with_items(app, &[&clear, &quit])?;
 
             if let Some(window) = app.get_webview_window("main") {
-                let _ = window.hide();
+                if let Err(err) = window.hide() {
+                    eprintln!("failed to hide main window on startup: {err}");
+                }
             }
 
             #[cfg(target_os = "macos")]
@@ -592,9 +643,10 @@ pub fn run() {
                     "quit" => app.exit(0),
                     "clear_history" => {
                         let state = app.state::<ClipboardState>();
-                        state.items.lock().unwrap().clear();
-                        *state.last_seen.lock().unwrap() = None;
-                        let _ = persist_items(state.inner());
+                        match clear_items(state.inner()) {
+                            Ok(()) => emit_clipboard_updated(app),
+                            Err(err) => eprintln!("failed to clear clipboard history: {err}"),
+                        }
                     }
                     _ => {}
                 })
@@ -610,7 +662,10 @@ pub fn run() {
                             match button_state {
                                 MouseButtonState::Down => {
                                     tray_clicking.store(true, Ordering::SeqCst);
-                                    hide_guard_until.store(now_millis() + 350, Ordering::SeqCst);
+                                    hide_guard_until.store(
+                                        now_millis() + TRAY_HIDE_GUARD_DOWN_MS,
+                                        Ordering::SeqCst,
+                                    );
                                 }
                                 MouseButtonState::Up => {
                                     let ns_win = panel.id();
@@ -622,13 +677,15 @@ pub fn run() {
                                         macos_panel::set_frame_below_point(ns_win, pointer);
                                         macos_panel::activate_app();
                                         macos_panel::show_panel(ns_win);
-                                        hide_guard_until
-                                            .store(now_millis() + 320, Ordering::SeqCst);
+                                        hide_guard_until.store(
+                                            now_millis() + TRAY_HIDE_GUARD_UP_MS,
+                                            Ordering::SeqCst,
+                                        );
                                     }
 
                                     let guard = tray_clicking.clone();
                                     thread::spawn(move || {
-                                        thread::sleep(Duration::from_millis(170));
+                                        thread::sleep(Duration::from_millis(TRAY_CLICK_RESET_MS));
                                         guard.store(false, Ordering::SeqCst);
                                     });
                                 }
@@ -640,10 +697,16 @@ pub fn run() {
                             let app = _tray.app_handle();
                             if let Some(window) = app.get_webview_window("main") {
                                 if window.is_visible().unwrap_or(false) {
-                                    let _ = window.hide();
+                                    if let Err(err) = window.hide() {
+                                        eprintln!("failed to hide main window: {err}");
+                                    }
                                 } else {
-                                    let _ = window.show();
-                                    let _ = window.set_focus();
+                                    if let Err(err) = window.show() {
+                                        eprintln!("failed to show main window: {err}");
+                                    }
+                                    if let Err(err) = window.set_focus() {
+                                        eprintln!("failed to focus main window: {err}");
+                                    }
                                 }
                             }
                         }

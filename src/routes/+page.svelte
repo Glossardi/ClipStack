@@ -4,13 +4,11 @@
     import { listen } from "@tauri-apps/api/event";
     import { getCurrentWindow } from "@tauri-apps/api/window";
     import { checkForUpdatesOnStartup } from "$lib/updater.js";
-
-    interface ClipItem {
-        id: string;
-        content: string;
-        content_type: string;
-        created_at: number;
-    }
+    import {
+        getRelativeTime,
+        getTypeLabel,
+        type ClipItem,
+    } from "$lib/clipboard";
 
     const appWindow = getCurrentWindow();
 
@@ -21,25 +19,33 @@
     let copyFeedbackTimeout: ReturnType<typeof setTimeout> | null = null;
     let deleteFeedbackTimeout: ReturnType<typeof setTimeout> | null = null;
 
-    let refreshInterval: ReturnType<typeof setInterval> | null = null;
+    let relativeTimeInterval: ReturnType<typeof setInterval> | null = null;
+    let refreshInFlight = false;
     let unlistenFocus: (() => void) | null = null;
+    let unlistenClipboardUpdated: (() => void) | null = null;
     let darkModeListener: ((event: MediaQueryListEvent) => void) | null = null;
+    let colorSchemeMedia: MediaQueryList | null = null;
+    let relativeTimeTick = Date.now();
 
-    const REFRESH_INTERVAL_MS = 700;
+    const RELATIVE_TIME_REFRESH_MS = 30_000;
 
     onMount(async () => {
         applyColorScheme();
         void checkForUpdatesOnStartup();
 
-        const media = window.matchMedia("(prefers-color-scheme: dark)");
+        colorSchemeMedia = window.matchMedia("(prefers-color-scheme: dark)");
         darkModeListener = () => applyColorScheme();
-        media.addEventListener("change", darkModeListener);
+        colorSchemeMedia.addEventListener("change", darkModeListener);
 
         await refreshItems();
 
-        refreshInterval = setInterval(() => {
-            refreshItems();
-        }, REFRESH_INTERVAL_MS);
+        unlistenClipboardUpdated = await listen("clipboard-updated", async () => {
+            void refreshItems();
+        });
+
+        relativeTimeInterval = setInterval(() => {
+            relativeTimeTick = Date.now();
+        }, RELATIVE_TIME_REFRESH_MS);
 
         unlistenFocus = await listen("tauri://focus", async () => {
             await refreshItems();
@@ -49,12 +55,15 @@
     });
 
     onDestroy(() => {
-        if (refreshInterval !== null) {
-            clearInterval(refreshInterval);
+        if (relativeTimeInterval !== null) {
+            clearInterval(relativeTimeInterval);
         }
 
         if (unlistenFocus) {
             unlistenFocus();
+        }
+        if (unlistenClipboardUpdated) {
+            unlistenClipboardUpdated();
         }
 
         window.removeEventListener("keydown", handleKeydown);
@@ -65,9 +74,8 @@
             clearTimeout(deleteFeedbackTimeout);
         }
 
-        const media = window.matchMedia("(prefers-color-scheme: dark)");
-        if (darkModeListener) {
-            media.removeEventListener("change", darkModeListener);
+        if (colorSchemeMedia && darkModeListener) {
+            colorSchemeMedia.removeEventListener("change", darkModeListener);
         }
     });
 
@@ -77,25 +85,38 @@
     }
 
     async function refreshItems() {
-        const items = await invoke<ClipItem[]>("get_clipboard_items");
-        allItems = items;
+        if (refreshInFlight) return;
+        refreshInFlight = true;
 
-        if (allItems.length === 0) {
-            selectedIndex = -1;
-        } else if (selectedIndex >= allItems.length) {
-            selectedIndex = allItems.length - 1;
+        try {
+            const items = await invoke<ClipItem[]>("get_clipboard_items");
+            allItems = items;
+
+            if (allItems.length === 0) {
+                selectedIndex = -1;
+            } else if (selectedIndex >= allItems.length) {
+                selectedIndex = allItems.length - 1;
+            }
+        } catch (error) {
+            console.error("Failed to refresh clipboard items:", error);
+        } finally {
+            refreshInFlight = false;
         }
     }
 
     async function handleCopy(item: ClipItem) {
-        await invoke("copy_to_clipboard", { content: item.content });
-        copiedItemId = item.id;
-        if (copyFeedbackTimeout) {
-            clearTimeout(copyFeedbackTimeout);
+        try {
+            await invoke("copy_to_clipboard", { content: item.content });
+            copiedItemId = item.id;
+            if (copyFeedbackTimeout) {
+                clearTimeout(copyFeedbackTimeout);
+            }
+            copyFeedbackTimeout = setTimeout(() => {
+                copiedItemId = null;
+            }, 2200);
+        } catch (error) {
+            console.error("Failed to copy clipboard item:", error);
         }
-        copyFeedbackTimeout = setTimeout(() => {
-            copiedItemId = null;
-        }, 2200);
     }
 
     async function handleDelete(item: ClipItem) {
@@ -103,11 +124,17 @@
         if (deleteFeedbackTimeout) {
             clearTimeout(deleteFeedbackTimeout);
         }
-        await invoke("delete_clipboard_item", { id: item.id });
-        await refreshItems();
-        deleteFeedbackTimeout = setTimeout(() => {
-            deletingItemId = null;
-        }, 350);
+
+        try {
+            await invoke("delete_clipboard_item", { id: item.id });
+            await refreshItems();
+        } catch (error) {
+            console.error("Failed to delete clipboard item:", error);
+        } finally {
+            deleteFeedbackTimeout = setTimeout(() => {
+                deletingItemId = null;
+            }, 350);
+        }
     }
 
     async function closePopover() {
@@ -116,7 +143,7 @@
 
     function handleKeydown(event: KeyboardEvent) {
         if (event.key === "Escape") {
-            closePopover();
+            void closePopover();
             return;
         }
 
@@ -139,27 +166,9 @@
         if (event.key === "Enter") {
             if (selectedIndex < 0 || selectedIndex >= allItems.length) return;
             event.preventDefault();
-            handleCopy(allItems[selectedIndex]);
+            void handleCopy(allItems[selectedIndex]);
             return;
         }
-    }
-
-    function getRelativeTime(timestamp: number): string {
-        const seconds = Math.max(
-            0,
-            Math.floor((Date.now() - timestamp) / 1000),
-        );
-        if (seconds < 60) return "Just now";
-        const minutes = Math.floor(seconds / 60);
-        if (minutes < 60) return `${minutes}m`;
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) return `${hours}h`;
-        const days = Math.floor(hours / 24);
-        return `${days}d`;
-    }
-
-    function getTypeLabel(type: string): string {
-        return type === "url" ? "URL" : "Text";
     }
 </script>
 
@@ -199,6 +208,7 @@
                         <p class="item-meta">
                             {getTypeLabel(item.content_type)} · {getRelativeTime(
                                 item.created_at,
+                                relativeTimeTick,
                             )}
                             {#if copiedItemId === item.id}
                                 · Copied

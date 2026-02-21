@@ -7,17 +7,27 @@ Minimal macOS clipboard manager in the menu bar, built with Tauri v2 + Svelte + 
 - Menu bar popover with tray icon toggle
 - Clipboard text/URL capture in Rust backend
 - Persistent clipboard history on disk (survives restart/crash)
+- Event-driven UI updates on clipboard changes
 - Click-to-copy with lightweight "Copied" feedback
 - Per-item delete
 - Outside click / focus-loss close behavior
 - Escape closes popover
 - Light/dark mode follows system
 
+## Project Structure (High-Level)
+
+- `src/routes/+page.svelte`: Main UI (menu bar popover)
+- `src/lib/clipboard.ts`: Shared types and time/type formatting
+- `src/lib/updater.js`: Updater flow wrapper
+- `src-tauri/src/lib.rs`: Native clipboard backend + tray behavior
+- `src-tauri/tauri.conf.json`: App config + updater endpoints
+- `src-tauri/capabilities/default.json`: Capability allowlist
+
 ## Requirements
 
 - macOS 14+
 - Node.js 18+
-- Rust toolchain
+- Rust toolchain (>= 1.88)
 
 ## Development
 
@@ -94,6 +104,7 @@ On startup, ClipStack loads this file automatically.
 
 - All clipboard data stays local on your Mac.
 - No telemetry, analytics, or network sync.
+- CSP is enabled in Tauri config and frontend uses module imports (no global `window.__TAURI__`).
 
 ## License
 
