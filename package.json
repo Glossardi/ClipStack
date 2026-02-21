@@ -13,7 +13,7 @@
     "test": "node --test src/lib/updater.test.js",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "tauri": "tauri",
+    "tauri": "PATH=\"$HOME/.cargo/bin:$PATH\" tauri",
     "build:macos:app": "npm run tauri build -- --bundles app",
     "build:macos:dmg": "npm run build:macos:app && ./scripts/build-dmg.sh"
   },

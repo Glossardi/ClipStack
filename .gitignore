@@ -31,6 +31,7 @@ build/
 
 # Cache
 tmp-npm-cache/
+web/tmp-npm-cache/
 
 # Local agent notes / private docs
 CLAUDE.md
