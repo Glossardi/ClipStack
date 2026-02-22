@@ -1,379 +1,130 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>ClipStack | Minimal macOS Clipboard Manager</title>
-        <meta
-            name="description"
-            content="Download the latest ClipStack build for macOS. Fast, minimal, local-first clipboard history for Apple Silicon and Intel Macs."
-        />
-        <meta
-            name="keywords"
-            content="ClipStack, macOS clipboard manager, download clipboard app, menu bar app, Apple Silicon, Intel Mac"
-        />
-        <meta name="author" content="Simon" />
-        <meta name="theme-color" content="#0f1114" />
-        <meta name="robots" content="index,follow,max-image-preview:large" />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="ClipStack" />
-        <meta
-            property="og:title"
-            content="ClipStack | Minimal macOS Clipboard Manager"
-        />
-        <meta
-            property="og:description"
-            content="Always get the latest ClipStack version for macOS. Built for speed, privacy, and focus."
-        />
-        <meta property="og:url" content="https://clipstack.click/" />
-        <meta
-            property="og:image"
-            content="https://clipstack.click/assets/clipstack-logo.png"
-        />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta
-            name="twitter:title"
-            content="ClipStack | Minimal macOS Clipboard Manager"
-        />
-        <meta
-            name="twitter:description"
-            content="Minimal clipboard history for macOS. Download the latest version instantly."
-        />
-        <meta
-            name="twitter:image"
-            content="https://clipstack.click/assets/clipstack-logo.png"
-        />
-        <link rel="canonical" href="https://clipstack.click/" />
-        <link
-            rel="alternate"
-            hreflang="en"
-            href="https://clipstack.click/?lang=en"
-        />
-        <link
-            rel="alternate"
-            hreflang="de"
-            href="https://clipstack.click/?lang=de"
-        />
-        <link
-            rel="alternate"
-            hreflang="x-default"
-            href="https://clipstack.click/"
-        />
-        <link rel="icon" href="./assets/favicon.png" sizes="32x32" />
-        <link rel="apple-touch-icon" href="./assets/clipstack-logo.png" />
-        <link rel="stylesheet" href="./styles.css" />
-        <script src="./env.js"></script>
-        <script type="application/ld+json" id="software-schema">
-            {
-                "@context": "https://schema.org",
-                "@type": "SoftwareApplication",
-                "name": "ClipStack",
-                "applicationCategory": "ProductivityApplication",
-                "operatingSystem": "macOS",
-                "softwareVersion": "latest",
-                "url": "https://clipstack.click/",
-                "downloadUrl": "https://github.com/Glossardi/ClipStack/releases/latest",
-                "author": {
-                    "@type": "Person",
-                    "name": "Simon"
-                },
-                "offers": {
-                    "@type": "Offer",
-                    "price": "0",
-                    "priceCurrency": "USD"
-                }
-            }
-        </script>
-        <script type="application/ld+json" id="faq-schema">
-            {
-                "@context": "https://schema.org",
-                "@type": "FAQPage",
-                "mainEntity": [
-                    {
-                        "@type": "Question",
-                        "name": "How do I install ClipStack on macOS?",
-                        "acceptedAnswer": {
-                            "@type": "Answer",
-                            "text": "Download the DMG, open it, drag ClipStack into Applications, then launch it from your Applications folder."
-                        }
-                    },
-                    {
-                        "@type": "Question",
-                        "name": "Does ClipStack support Apple Silicon and Intel Macs?",
-                        "acceptedAnswer": {
-                            "@type": "Answer",
-                            "text": "Yes. Separate builds are provided for Apple Silicon and Intel Macs."
-                        }
-                    },
-                    {
-                        "@type": "Question",
-                        "name": "Is ClipStack open source?",
-                        "acceptedAnswer": {
-                            "@type": "Answer",
-                            "text": "Yes, ClipStack is open source and available on GitHub under the MIT license."
-                        }
-                    },
-                    {
-                        "@type": "Question",
-                        "name": "Where is clipboard data stored?",
-                        "acceptedAnswer": {
-                            "@type": "Answer",
-                            "text": "Clipboard history is stored locally on your Mac. No cloud sync is required."
-                        }
-                    }
-                ]
-            }
-        </script>
-    </head>
-    <body>
-        <div id="preload" aria-hidden="true">
-            <img
-                src="./assets/clipstack-logo.svg"
-                alt=""
-                width="48"
-                height="48"
-            />
-        </div>
-
-        <div class="orb orb-a" aria-hidden="true"></div>
-        <div class="orb orb-b" aria-hidden="true"></div>
-
-        <header class="site-header">
-            <a class="brand" href="#top" aria-label="ClipStack home">
-                <img
-                    src="./assets/clipstack-logo.svg"
-                    width="24"
-                    height="24"
-                    alt="ClipStack logo"
-                />
-                <span>ClipStack</span>
-            </a>
-            <nav class="site-nav" aria-label="Primary">
-                <a href="#faq" data-i18n="nav.faq">FAQ</a>
-                <a href="#about" data-i18n="nav.about">About</a>
-                <a
-                    id="github-link"
-                    href="https://github.com/Glossardi/ClipStack"
-                    target="_blank"
-                    rel="noreferrer"
-                    data-i18n="nav.github"
-                    >GitHub</a
-                >
-                <div class="lang-switch" role="group" aria-label="Language">
-                    <button type="button" data-lang="en" class="lang-btn">
-                        EN
-                    </button>
-                    <button type="button" data-lang="de" class="lang-btn">
-                        DE
-                    </button>
-                </div>
-            </nav>
-        </header>
-
-        <main id="top">
-            <section class="hero reveal" aria-labelledby="hero-title">
-                <div class="hero-copy">
-                    <h1 id="hero-title" data-i18n="hero.title">ClipStack</h1>
-                    <p class="subtitle" data-i18n="hero.subtitle">
-                        Clipboard history in your menu bar.
-                    </p>
-
-                    <div
-                        class="download-grid"
-                        id="download-grid"
-                        aria-live="polite"
-                    >
-                        <a
-                            id="download-arm"
-                            class="download-card"
-                            href="https://github.com/Glossardi/ClipStack/releases/latest"
-                            target="_blank"
-                            rel="noreferrer"
-                            data-track-download="apple_silicon"
-                        >
-                            <span
-                                class="download-title"
-                                data-i18n="hero.cta_arm"
-                                >Download for Apple Silicon</span
-                            >
-                            <span
-                                class="download-meta"
-                                id="download-arm-meta"
-                                data-i18n="hero.loading"
-                                >Looking up latest release...</span
-                            >
-                        </a>
-                        <a
-                            id="download-intel"
-                            class="download-card"
-                            href="https://github.com/Glossardi/ClipStack/releases/latest"
-                            target="_blank"
-                            rel="noreferrer"
-                            data-track-download="intel"
-                        >
-                            <span
-                                class="download-title"
-                                data-i18n="hero.cta_intel"
-                                >Download for Intel Mac</span
-                            >
-                            <span
-                                class="download-meta"
-                                id="download-intel-meta"
-                                data-i18n="hero.loading"
-                                >Looking up latest release...</span
-                            >
-                        </a>
-                    </div>
-
-                    <p class="release-line">
-                        <span data-i18n="hero.latest">Latest stable:</span>
-                        <strong id="latest-version" data-release-version
-                            >v-</strong
-                        >
-                        <span class="dot">•</span>
-                        <span id="latest-updated" data-i18n="hero.loading"
-                            >Looking up latest release...</span
-                        >
-                    </p>
-                    <p class="hero-meta">
-                        <span data-i18n="trust.local">Local-first storage</span>
-                        <span class="dot">•</span>
-                        <span data-i18n="trust.opensource"
-                            >Open source (MIT)</span
-                        >
-                    </p>
-                </div>
-
-                <div class="hero-visual reveal-delay">
-                    <img
-                        src="./assets/app-preview.svg"
-                        alt="ClipStack app preview"
-                        width="560"
-                        height="680"
-                    />
-                </div>
-            </section>
-
-            <section class="features reveal" aria-label="Highlights">
-                <article>
-                    <h2 data-i18n="feature.one.title">Made for the menu bar</h2>
-                    <p data-i18n="feature.one.body">Fast access. No clutter.</p>
-                </article>
-                <article>
-                    <h2 data-i18n="feature.two.title">Fast by design</h2>
-                    <p data-i18n="feature.two.body">
-                        Tiny footprint and smooth keyboard flow.
-                    </p>
-                </article>
-                <article>
-                    <h2 data-i18n="feature.three.title">Simple install</h2>
-                    <p data-i18n="feature.three.body">
-                        Download. Drag to Applications. Done.
-                    </p>
-                </article>
-            </section>
-
-            <section class="faq reveal" id="faq" aria-labelledby="faq-title">
-                <div class="section-head">
-                    <h2 id="faq-title" data-i18n="faq.title">
-                        Frequently asked questions
-                    </h2>
-                </div>
-
-                <details>
-                    <summary data-i18n="faq.q1.q">
-                        How do I install ClipStack on macOS?
-                    </summary>
-                    <p data-i18n="faq.q1.a">
-                        Download the DMG, open it, drag ClipStack into
-                        Applications, then launch it.
-                    </p>
-                </details>
-                <details>
-                    <summary data-i18n="faq.q2.q">
-                        Does ClipStack support Apple Silicon and Intel Macs?
-                    </summary>
-                    <p data-i18n="faq.q2.a">
-                        Yes. This page automatically serves the latest builds
-                        for both chip types.
-                    </p>
-                </details>
-                <details>
-                    <summary data-i18n="faq.q3.q">
-                        Is ClipStack open source?
-                    </summary>
-                    <p data-i18n="faq.q3.a">
-                        Yes, the full source code is available on GitHub under
-                        the MIT license.
-                    </p>
-                </details>
-                <details>
-                    <summary data-i18n="faq.q4.q">
-                        Where is my clipboard data stored?
-                    </summary>
-                    <p data-i18n="faq.q4.a">
-                        Clipboard history is stored locally on your Mac. No
-                        cloud account is required.
-                    </p>
-                </details>
-                <details>
-                    <summary data-i18n="faq.q5.q">
-                        Can I verify the latest version?
-                    </summary>
-                    <p data-i18n="faq.q5.a">
-                        Yes. Version and download links are read from the latest
-                        GitHub Release in real time.
-                    </p>
-                </details>
-            </section>
-
-            <section
-                class="about reveal"
-                id="about"
-                aria-labelledby="about-title"
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ClipStack — Minimaler Clipboard-Flow für macOS</title>
+    <meta
+      name="description"
+      content="ClipStack ist ein schneller, fokussierter Clipboard-Manager für macOS. Kostenloser Download für Apple Silicon und Intel."
+    />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://clipstack.app/" />
+    <link rel="alternate" hreflang="de" href="https://clipstack.app/?lang=de" />
+    <link rel="alternate" hreflang="en" href="https://clipstack.app/?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://clipstack.app/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="ClipStack — Faster clipboard flow for macOS" />
+    <meta
+      property="og:description"
+      content="Free download for Apple Silicon and Intel Macs. Minimal, private, and built for focus."
+    />
+    <meta property="og:url" content="https://clipstack.app/" />
+    <meta property="og:image" content="https://clipstack.app/assets/logo.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ClipStack — Faster clipboard flow for macOS" />
+    <meta
+      name="twitter:description"
+      content="A clean clipboard utility for creators and developers. Free macOS download."
+    />
+    <meta name="twitter:image" content="https://clipstack.app/assets/logo.png" />
+    <link rel="icon" href="./assets/logo.png" />
+    <script defer src="https://analytics.glossardi.de/script.js" data-website-id="c230ce3d-9704-46bc-9e3d-ae3bb1f35633"></script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "ClipStack",
+        "applicationCategory": "ProductivityApplication",
+        "operatingSystem": "macOS",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "EUR"
+        },
+        "downloadUrl": [
+          "https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_aarch64.dmg",
+          "https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_x64.dmg"
+        ],
+        "creator": {
+          "@type": "Person",
+          "name": "Simon"
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <main>
+        <section class="hero reveal">
+          <div class="brand">
+            <img src="./assets/logo.png" alt="ClipStack Logo" class="logo" />
+            <span>ClipStack</span>
+          </div>
+          <h1 data-i18n="headline">Copy less. Ship more.</h1>
+          <p class="subheadline" data-i18n="subheadline">
+            The minimal clipboard app that keeps your flow clean, fast, and distraction-free.
+          </p>
+          <div class="cta-row">
+            <a
+              class="download-btn"
+              href="https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_aarch64.dmg"
+              data-track="download-arm64"
+              data-i18n-aria="downloadArmAria"
             >
-                <div class="section-head">
-                    <h2 id="about-title" data-i18n="about.title">
-                        About Simon
-                    </h2>
-                </div>
-                <p data-i18n="about.body">
-                    I am Simon, a professional software engineer focused on AI
-                    products. I build small tools that make daily work easier,
-                    and I share the best ones as open-source apps.
-                </p>
-            </section>
-        </main>
+              <span data-i18n="downloadApple">Download for Apple Silicon</span>
+              <small>DMG · arm64</small>
+            </a>
+            <a
+              class="download-btn secondary"
+              href="https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_x64.dmg"
+              data-track="download-x64"
+              data-i18n-aria="downloadIntelAria"
+            >
+              <span data-i18n="downloadIntel">Download for Intel</span>
+              <small>DMG · x64</small>
+            </a>
+          </div>
+          <p class="micro" data-i18n="latestHint">Always points to the newest public release.</p>
+        </section>
 
-        <footer class="site-footer">
-            <p>
-                <span id="footer-year"></span> ClipStack.
-                <span data-i18n="footer.rights"
-                    >Built with care for focused work.</span
-                >
-            </p>
-            <div class="footer-links">
-                <a
-                    href="https://github.com/Glossardi/ClipStack"
-                    target="_blank"
-                    rel="noreferrer"
-                    data-i18n="footer.source"
-                    >Source Code</a
-                >
-                <a href="./imprint.html" data-i18n="footer.imprint">Imprint</a>
+        <section class="preview reveal">
+          <div class="mock-window" aria-hidden="true">
+            <div class="mock-bar">
+              <span></span><span></span><span></span>
             </div>
-        </footer>
-
-        <noscript>
-            <div class="noscript">
-                JavaScript is required to load the latest release links
-                automatically. You can still use
-                <a href="https://github.com/Glossardi/ClipStack/releases/latest"
-                    >GitHub Releases</a
-                >.
+            <div class="mock-content">
+              <p>“npm run build”</p>
+              <p>https://docs.example.com</p>
+              <p>Meet me at 14:00</p>
             </div>
-        </noscript>
+          </div>
+          <div>
+            <h2 data-i18n="benefitsTitle">Built for calm productivity</h2>
+            <ul class="benefits">
+              <li data-i18n="benefit1">Fewer interruptions while switching between tasks.</li>
+              <li data-i18n="benefit2">Faster execution for creators, coders, and operators.</li>
+              <li data-i18n="benefit3">Private by default — local-first and no cookies.</li>
+            </ul>
+          </div>
+        </section>
 
-        <script type="module" src="./app.js"></script>
-    </body>
+        <section class="about reveal">
+          <h2 data-i18n="aboutTitle">About Simon</h2>
+          <p data-i18n="aboutText">
+            I am Simon, building focused apps and practical tools that stay simple and useful.
+          </p>
+        </section>
+
+        <section class="legal reveal">
+          <p data-i18n="privacyText">
+            This site uses Umami analytics without cookies to understand aggregate usage and download demand.
+          </p>
+          <p data-i18n="imprintText">Impressum: Legal details will be added here according to EU requirements.</p>
+        </section>
+      </main>
+    </div>
+    <script defer src="./app.js"></script>
+  </body>
 </html>
