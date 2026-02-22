@@ -1,130 +1,679 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ClipStack — Minimaler Clipboard-Flow für macOS</title>
-    <meta
-      name="description"
-      content="ClipStack ist ein schneller, fokussierter Clipboard-Manager für macOS. Kostenloser Download für Apple Silicon und Intel."
-    />
-    <meta name="robots" content="index,follow" />
-    <link rel="canonical" href="https://clipstack.app/" />
-    <link rel="alternate" hreflang="de" href="https://clipstack.app/?lang=de" />
-    <link rel="alternate" hreflang="en" href="https://clipstack.app/?lang=en" />
-    <link rel="alternate" hreflang="x-default" href="https://clipstack.app/" />
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="ClipStack — Faster clipboard flow for macOS" />
-    <meta
-      property="og:description"
-      content="Free download for Apple Silicon and Intel Macs. Minimal, private, and built for focus."
-    />
-    <meta property="og:url" content="https://clipstack.app/" />
-    <meta property="og:image" content="https://clipstack.app/assets/logo.png" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="ClipStack — Faster clipboard flow for macOS" />
-    <meta
-      name="twitter:description"
-      content="A clean clipboard utility for creators and developers. Free macOS download."
-    />
-    <meta name="twitter:image" content="https://clipstack.app/assets/logo.png" />
-    <link rel="icon" href="./assets/logo.png" />
-    <script defer src="https://analytics.glossardi.de/script.js" data-website-id="c230ce3d-9704-46bc-9e3d-ae3bb1f35633"></script>
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "ClipStack",
-        "applicationCategory": "ProductivityApplication",
-        "operatingSystem": "macOS",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "EUR"
-        },
-        "downloadUrl": [
-          "https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_aarch64.dmg",
-          "https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_x64.dmg"
-        ],
-        "creator": {
-          "@type": "Person",
-          "name": "Simon"
-        }
-      }
-    </script>
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <div class="page">
-      <main>
-        <section class="hero reveal">
-          <div class="brand">
-            <img src="./assets/logo.png" alt="ClipStack Logo" class="logo" />
-            <span>ClipStack</span>
-          </div>
-          <h1 data-i18n="headline">Copy less. Ship more.</h1>
-          <p class="subheadline" data-i18n="subheadline">
-            The minimal clipboard app that keeps your flow clean, fast, and distraction-free.
-          </p>
-          <div class="cta-row">
-            <a
-              class="download-btn"
-              href="https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_aarch64.dmg"
-              data-track="download-arm64"
-              data-i18n-aria="downloadArmAria"
-            >
-              <span data-i18n="downloadApple">Download for Apple Silicon</span>
-              <small>DMG · arm64</small>
-            </a>
-            <a
-              class="download-btn secondary"
-              href="https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_x64.dmg"
-              data-track="download-x64"
-              data-i18n-aria="downloadIntelAria"
-            >
-              <span data-i18n="downloadIntel">Download for Intel</span>
-              <small>DMG · x64</small>
-            </a>
-          </div>
-          <p class="micro" data-i18n="latestHint">Always points to the newest public release.</p>
-        </section>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ClipStack — Copy less. Ship more.</title>
+  <meta name="description" content="ClipStack — the minimal clipboard history app for Mac. Instant access from the menu bar. Private by default, no account needed.">
+  <meta name="robots" content="index,follow">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="canonical" href="https://clipstack.app/">
+  <link rel="alternate" hreflang="de" href="https://clipstack.app/?lang=de">
+  <link rel="alternate" hreflang="en" href="https://clipstack.app/?lang=en">
+  <link rel="alternate" hreflang="x-default" href="https://clipstack.app/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ClipStack — Copy less. Ship more.">
+  <meta property="og:description" content="The minimal clipboard manager for Mac. Lives in your menu bar.">
+  <meta property="og:url" content="https://clipstack.app/">
+  <meta property="og:image" content="https://clipstack.app/assets/logo.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ClipStack — Copy less. Ship more.">
+  <meta name="twitter:description" content="The minimal clipboard manager for Mac. Lives in your menu bar.">
+  <meta name="twitter:image" content="https://clipstack.app/assets/logo.png">
+  <link rel="icon" href="./assets/logo.png">
+  <script defer src="https://analytics.glossardi.de/script.js" data-website-id="c230ce3d-9704-46bc-9e3d-ae3bb1f35633"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "ClipStack",
+    "applicationCategory": "ProductivityApplication",
+    "operatingSystem": "macOS",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+    "downloadUrl": [
+      "https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_aarch64.dmg",
+      "https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_x64.dmg"
+    ],
+    "creator": { "@type": "Person", "name": "Simon" }
+  }
+  </script>
+  <style>
+    /* ─── RESET ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        <section class="preview reveal">
-          <div class="mock-window" aria-hidden="true">
-            <div class="mock-bar">
-              <span></span><span></span><span></span>
-            </div>
-            <div class="mock-content">
-              <p>“npm run build”</p>
-              <p>https://docs.example.com</p>
-              <p>Meet me at 14:00</p>
-            </div>
-          </div>
-          <div>
-            <h2 data-i18n="benefitsTitle">Built for calm productivity</h2>
-            <ul class="benefits">
-              <li data-i18n="benefit1">Fewer interruptions while switching between tasks.</li>
-              <li data-i18n="benefit2">Faster execution for creators, coders, and operators.</li>
-              <li data-i18n="benefit3">Private by default — local-first and no cookies.</li>
-            </ul>
-          </div>
-        </section>
+    /* ─── TOKENS ─────────────────────────────────────────────── */
+    :root {
+      --bg:        #ffffff;
+      --bg-2:      #f5f5f7;
+      --text:      #1d1d1f;
+      --text-2:    #6e6e73;
+      --text-3:    #ababab;
+      --border:    #d2d2d7;
+      --border-2:  rgba(0,0,0,.06);
+      --btn:       #1d1d1f;
+      --btn-h:     #3a3a3c;
+      --r-btn:     980px;
+      --r-card:    20px;
+      --ease:      cubic-bezier(.25,.1,.25,1);
+    }
 
-        <section class="about reveal">
-          <h2 data-i18n="aboutTitle">About Simon</h2>
-          <p data-i18n="aboutText">
-            I am Simon, building focused apps and practical tools that stay simple and useful.
-          </p>
-        </section>
+    /* ─── BASE ───────────────────────────────────────────────── */
+    html { color-scheme: light; scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.5;
+    }
+    a { color: inherit; }
 
-        <section class="legal reveal">
-          <p data-i18n="privacyText">
-            This site uses Umami analytics without cookies to understand aggregate usage and download demand.
-          </p>
-          <p data-i18n="imprintText">Impressum: Legal details will be added here according to EU requirements.</p>
-        </section>
-      </main>
+    /* ─── LAYOUT ─────────────────────────────────────────────── */
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ─── HERO ───────────────────────────────────────────────── */
+    .hero {
+      padding: 96px 0 80px;
+      text-align: center;
+    }
+    .hero-icon {
+      width: 104px;
+      height: 104px;
+      border-radius: 24px;
+      margin: 0 auto 28px;
+      display: block;
+      box-shadow: 0 8px 32px rgba(0,0,0,.14), 0 2px 6px rgba(0,0,0,.08);
+      transition: transform .4s var(--ease);
+      user-select: none;
+    }
+    .hero-icon:hover { transform: scale(1.05) translateY(-2px); }
+    .hero-eyebrow {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-2);
+      letter-spacing: .01em;
+      margin-bottom: 14px;
+    }
+    h1 {
+      font-size: clamp(48px, 9vw, 88px);
+      font-weight: 700;
+      line-height: 1.03;
+      letter-spacing: -0.04em;
+      margin-bottom: 20px;
+    }
+    .hero-sub {
+      font-size: 19px;
+      line-height: 1.55;
+      color: var(--text-2);
+      max-width: 440px;
+      margin: 0 auto 44px;
+      letter-spacing: -.01em;
+    }
+
+    /* CTA */
+    .cta-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--btn);
+      color: #fff;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -.01em;
+      padding: 13px 26px;
+      border-radius: var(--r-btn);
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .2s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease);
+      box-shadow: 0 1px 4px rgba(0,0,0,.18);
+    }
+    .btn:hover {
+      background: var(--btn-h);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0,0,0,.2);
+    }
+    .btn:active { transform: translateY(0); }
+    .btn svg { flex-shrink: 0; }
+
+    .cta-caption {
+      font-size: 12px;
+      color: var(--text-3);
+      letter-spacing: .01em;
+    }
+    .cta-alt {
+      font-size: 13px;
+      color: var(--text-2);
+      text-decoration: none;
+    }
+    .cta-alt:hover { text-decoration: underline; }
+    .non-mac { display: none; gap: 16px; }
+    .non-mac a {
+      font-size: 13px;
+      color: var(--text-2);
+      text-decoration: none;
+    }
+    .non-mac a:hover { text-decoration: underline; }
+
+    /* ─── PREVIEW ────────────────────────────────────────────── */
+    .preview {
+      padding-bottom: 96px;
+    }
+    .preview-box {
+      background: var(--bg-2);
+      border-radius: 28px;
+      padding: 64px 40px 0;
+      text-align: center;
+      overflow: hidden;
+    }
+    .preview-box h2 {
+      font-size: clamp(28px, 5vw, 48px);
+      font-weight: 700;
+      letter-spacing: -.03em;
+      line-height: 1.08;
+      margin-bottom: 10px;
+    }
+    .preview-box .sub {
+      font-size: 16px;
+      color: var(--text-2);
+      margin-bottom: 48px;
+    }
+
+    /* macOS popover mock */
+    .popover {
+      max-width: 310px;
+      margin: 0 auto;
+      background: rgba(255,255,255,.95);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-radius: 14px;
+      box-shadow: 0 12px 48px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.07);
+      overflow: hidden;
+      text-align: left;
+      position: relative;
+    }
+    .popover-bar {
+      padding: 9px 12px 7px;
+      border-bottom: 1px solid var(--border-2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .popover-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .popover-count {
+      font-size: 11px;
+      color: var(--text-3);
+    }
+    .popover-search {
+      margin: 7px 10px;
+      background: #ebebf0;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 9px;
+    }
+    .popover-search span {
+      font-size: 12px;
+      color: var(--text-3);
+    }
+    .popover-items { padding: 4px 6px 10px; }
+    .pi {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      cursor: default;
+    }
+    .pi:first-child { background: rgba(0,122,255,.09); }
+    .pi-icon {
+      width: 30px; height: 30px;
+      border-radius: 7px;
+      background: #e8e8ed;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .pi:first-child .pi-icon { background: rgba(0,122,255,.15); }
+    .pi-label {
+      font-size: 12.5px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 400;
+    }
+    .pi:first-child .pi-label { font-weight: 500; }
+    .pi-time { font-size: 10.5px; color: var(--text-3); margin-top: 1px; }
+
+    /* ─── FEATURES ───────────────────────────────────────────── */
+    .features { padding: 80px 0 96px; }
+    .features-headline {
+      text-align: center;
+      font-size: clamp(26px, 4vw, 40px);
+      font-weight: 700;
+      letter-spacing: -.03em;
+      margin-bottom: 52px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .feat {
+      background: var(--bg-2);
+      border-radius: var(--r-card);
+      padding: 30px 26px;
+    }
+    .feat-icon {
+      width: 42px; height: 42px;
+      background: #fff;
+      border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.09);
+    }
+    .feat-icon svg {
+      width: 20px; height: 20px;
+      stroke: var(--text);
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .feat h3 {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -.02em;
+      margin-bottom: 7px;
+    }
+    .feat p {
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.55;
+      letter-spacing: -.01em;
+    }
+
+    /* ─── FOOTER ─────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 0;
+    }
+    .footer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 12px;
+      color: var(--text-3);
+    }
+    .footer-logo { width: 18px; height: 18px; border-radius: 4px; }
+    .footer-links { display: flex; gap: 18px; }
+    .footer-links a {
+      font-size: 12px;
+      color: var(--text-3);
+      text-decoration: none;
+    }
+    .footer-links a:hover { color: var(--text-2); }
+
+    /* ─── ANIMATIONS ─────────────────────────────────────────── */
+    .up {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity .55s var(--ease), transform .55s var(--ease);
+    }
+    .up.show { opacity: 1; transform: translateY(0); }
+    .up:nth-child(2) { transition-delay: .08s; }
+    .up:nth-child(3) { transition-delay: .16s; }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────────── */
+    @media (max-width: 740px) {
+      .hero { padding: 64px 0 60px; }
+      h1 { font-size: 44px; }
+      .hero-sub { font-size: 17px; }
+      .preview-box { padding: 48px 24px 0; border-radius: 20px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .features { padding: 60px 0 72px; }
+      .btn { width: 100%; justify-content: center; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .up { opacity: 1; transform: none; transition: none; }
+      .btn, .hero-icon { transition: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── HERO ───────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="wrap">
+      <img class="hero-icon" src="./assets/logo.png" alt="ClipStack app icon">
+      <p class="hero-eyebrow" data-i18n="eyebrow">Clipboard manager for Mac</p>
+      <h1 data-i18n="headline">Copy less.<br>Ship more.</h1>
+      <p class="hero-sub" data-i18n="sub">
+        The minimal clipboard manager that lives in your menu bar.
+        Always there, never in the way.
+      </p>
+
+      <div class="cta-stack">
+        <!-- Primary CTA — configured by JS -->
+        <a class="btn" id="btn-primary" href="#" data-track="">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="8" y1="2" x2="8" y2="12"/>
+            <polyline points="4 8 8 12 12 8"/>
+          </svg>
+          <span data-i18n="dlMac">Download for Mac</span>
+        </a>
+        <p class="cta-caption" data-i18n="caption">macOS 13 or later &nbsp;·&nbsp; Free &nbsp;·&nbsp; No account needed</p>
+        <a class="cta-alt" id="btn-intel" href="#" data-track="download-x64" data-i18n="intelHint" style="display:none">
+          On an Intel Mac? Download here →
+        </a>
+        <div class="non-mac" id="non-mac">
+          <a href="#" id="nm-arm" data-track="download-arm64" data-i18n="dlArm">Apple Silicon</a>
+          <a href="#" id="nm-intel" data-track="download-x64" data-i18n="dlIntel">Intel Mac</a>
+        </div>
+      </div>
     </div>
-    <script defer src="./app.js"></script>
-  </body>
+  </section>
+
+  <!-- ── APP PREVIEW ────────────────────────────────────────────── -->
+  <section class="preview">
+    <div class="wrap">
+      <div class="preview-box">
+        <h2 data-i18n="previewTitle">Your clipboard,<br>always within reach.</h2>
+        <p class="sub" data-i18n="previewSub">One shortcut. Every clip you've ever copied, instantly.</p>
+
+        <!-- Menu bar popover mock -->
+        <div class="popover" role="img" aria-label="ClipStack showing recent clipboard items">
+          <div class="popover-bar">
+            <span class="popover-name">ClipStack</span>
+            <span class="popover-count">42 items</span>
+          </div>
+          <div class="popover-search">
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="#ababab" stroke-width="1.4" aria-hidden="true">
+              <circle cx="4.5" cy="4.5" r="3.5"/><line x1="7.5" y1="7.5" x2="10" y2="10"/>
+            </svg>
+            <span data-i18n="searchPH">Search clips…</span>
+          </div>
+          <div class="popover-items">
+            <div class="pi">
+              <div class="pi-icon">⌨️</div>
+              <div>
+                <div class="pi-label">npm run build</div>
+                <div class="pi-time">Just now</div>
+              </div>
+            </div>
+            <div class="pi">
+              <div class="pi-icon">🔗</div>
+              <div>
+                <div class="pi-label">https://docs.example.com/api/v2</div>
+                <div class="pi-time">3 min ago</div>
+              </div>
+            </div>
+            <div class="pi">
+              <div class="pi-icon">📝</div>
+              <div>
+                <div class="pi-label">Meet me at 14:00, 3rd floor</div>
+                <div class="pi-time">11 min ago</div>
+              </div>
+            </div>
+            <div class="pi">
+              <div class="pi-icon">🔑</div>
+              <div>
+                <div class="pi-label">sk-proj-xK9mAbcDef…</div>
+                <div class="pi-time">1 h ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURES ───────────────────────────────────────────────── -->
+  <section class="features">
+    <div class="wrap">
+      <h2 class="features-headline" data-i18n="featTitle">Built for calm productivity.</h2>
+      <div class="features-grid">
+
+        <div class="feat up">
+          <div class="feat-icon">
+            <svg viewBox="0 0 24 24"><path d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13Z"/></svg>
+          </div>
+          <h3 data-i18n="f1h">Instant access</h3>
+          <p data-i18n="f1p">One click or shortcut away from your menu bar — no window switching, no friction.</p>
+        </div>
+
+        <div class="feat up">
+          <div class="feat-icon">
+            <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+          </div>
+          <h3 data-i18n="f2h">Private by default</h3>
+          <p data-i18n="f2p">Stays on your Mac. No cloud, no sync, no tracking. Your data never leaves your device.</p>
+        </div>
+
+        <div class="feat up">
+          <div class="feat-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 15.5"/></svg>
+          </div>
+          <h3 data-i18n="f3h">Zero friction</h3>
+          <p data-i18n="f3p">No account, no subscription, no setup. Download, open, and it just works.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ─────────────────────────────────────────────────── -->
+  <!-- Analytics: Umami, cookieless -->
+  <footer>
+    <div class="wrap">
+      <div class="footer-row">
+        <div class="footer-left">
+          <img class="footer-logo" src="./assets/logo.png" alt="">
+          <span data-i18n="copyright">© 2025 Simon · All rights reserved</span>
+        </div>
+        <div class="footer-links">
+          <a href="#" data-i18n="privacy">Privacy</a>
+          <a href="#" data-i18n="impressum">Impressum</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ── SCRIPT ─────────────────────────────────────────────────── -->
+  <script>
+    const FALLBACK = {
+      arm:   "https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_aarch64.dmg",
+      intel: "https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_x64.dmg"
+    };
+
+    const T = {
+      en: {
+        eyebrow:     "Clipboard manager for Mac",
+        headline:    "Copy less.<br>Ship more.",
+        sub:         "The minimal clipboard manager that lives in your menu bar. Always there, never in the way.",
+        dlMac:       "Download for Mac",
+        dlArm:       "Apple Silicon",
+        dlIntel:     "Intel Mac",
+        intelHint:   "On an Intel Mac? Download here \u2192",
+        caption:     "macOS 13 or later \u00b7 Free \u00b7 No account needed",
+        previewTitle:"Your clipboard,<br>always within reach.",
+        previewSub:  "One shortcut. Every clip you\u2019ve ever copied, instantly.",
+        searchPH:    "Search clips\u2026",
+        featTitle:   "Built for calm productivity.",
+        f1h: "Instant access",       f1p: "One click or shortcut away from your menu bar \u2014 no window switching, no friction.",
+        f2h: "Private by default",   f2p: "Stays on your Mac. No cloud, no sync, no tracking. Your data never leaves your device.",
+        f3h: "Zero friction",        f3p: "No account, no subscription, no setup. Download, open, and it just works.",
+        privacy:   "Privacy",
+        impressum: "Impressum",
+        copyright: "\u00a9 2025 Simon \u00b7 All rights reserved",
+        aria:      "Download ClipStack for Mac"
+      },
+      de: {
+        eyebrow:     "Clipboard-Manager f\u00fcr Mac",
+        headline:    "Weniger kopieren.<br>Mehr schaffen.",
+        sub:         "Die minimalistische Clipboard-App in deiner Men\u00fcleiste. Immer dabei, nie im Weg.",
+        dlMac:       "Download f\u00fcr Mac",
+        dlArm:       "Apple Silicon",
+        dlIntel:     "Intel Mac",
+        intelHint:   "Intel Mac? Hier herunterladen \u2192",
+        caption:     "macOS 13 oder neuer \u00b7 Kostenlos \u00b7 Kein Account n\u00f6tig",
+        previewTitle:"Dein Clipboard,<br>immer griffbereit.",
+        previewSub:  "Ein Shortcut. Jeder Text, den du je kopiert hast, sofort.",
+        searchPH:    "Clips suchen\u2026",
+        featTitle:   "F\u00fcr ruhige Produktivit\u00e4t gebaut.",
+        f1h: "Sofortiger Zugriff",   f1p: "Ein Klick oder Shortcut gen\u00fcgt \u2014 direkt aus der Men\u00fcleiste, kein Fensterwechsel.",
+        f2h: "Privat by default",    f2p: "Alles bleibt auf deinem Mac. Keine Cloud, kein Sync, kein Tracking.",
+        f3h: "Zero Friction",        f3p: "Kein Account, kein Abo, kein Setup. Herunterladen, \u00f6ffnen, fertig.",
+        privacy:   "Datenschutz",
+        impressum: "Impressum",
+        copyright: "\u00a9 2025 Simon \u00b7 Alle Rechte vorbehalten",
+        aria:      "ClipStack f\u00fcr Mac herunterladen"
+      }
+    };
+
+    /* ── URL state ── */
+    const urls = { arm: FALLBACK.arm, intel: FALLBACK.intel };
+
+    /* ── DOM refs ── */
+    const btnPrimary  = document.getElementById("btn-primary");
+    const btnIntel    = document.getElementById("btn-intel");
+    const nonMac      = document.getElementById("non-mac");
+    const nmArm       = document.getElementById("nm-arm");
+    const nmIntel     = document.getElementById("nm-intel");
+    const captionEl   = document.querySelector(".cta-caption");
+
+    /* ── Language ── */
+    function getLang() {
+      const q = new URLSearchParams(location.search).get("lang");
+      if (q === "de" || q === "en") return q;
+      return (navigator.language || "").toLowerCase().startsWith("de") ? "de" : "en";
+    }
+
+    function applyLang(lang) {
+      const t = T[lang] || T.en;
+      document.documentElement.lang = lang;
+      document.title = lang === "de"
+        ? "ClipStack \u2014 Weniger kopieren. Mehr schaffen."
+        : "ClipStack \u2014 Copy less. Ship more.";
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const k = el.dataset.i18n;
+        if (t[k] != null) el.innerHTML = t[k];
+      });
+      if (btnPrimary) btnPrimary.setAttribute("aria-label", t.aria);
+    }
+
+    /* ── Fetch real asset URLs from GitHub API ── */
+    async function fetchLatest() {
+      try {
+        const r = await fetch(
+          "https://api.github.com/repos/Glossardi/ClipStack/releases/latest",
+          { headers: { Accept: "application/vnd.github+json" } }
+        );
+        if (!r.ok) return;
+        const data = await r.json();
+        (data.assets || []).forEach(a => {
+          if (/aarch64\.dmg$/i.test(a.name) && a.browser_download_url) urls.arm   = a.browser_download_url;
+          if (/x64\.dmg$/i.test(a.name)     && a.browser_download_url) urls.intel = a.browser_download_url;
+        });
+      } catch (_) { /* silently fall back to /latest redirect */ }
+    }
+
+    /* ── Architecture detection ── */
+    function getMacArch() {
+      const ua = navigator.userAgent.toLowerCase();
+      if (!/macintosh|mac os x/.test(ua)) return { mac: false };
+      if (/arm64|aarch64/.test(ua)) return { mac: true, arm: true };
+      return { mac: true, arm: false };  // Intel or unknown → show arm as primary + intel link
+    }
+
+    /* ── Wire download buttons ── */
+    function setupDownloads() {
+      if (nmArm)   nmArm.href   = urls.arm;
+      if (nmIntel) nmIntel.href = urls.intel;
+      if (btnIntel) btnIntel.href = urls.intel;
+
+      const { mac, arm } = getMacArch();
+
+      if (!mac) {
+        /* Non-Mac: hide primary, show both as text links */
+        if (btnPrimary) btnPrimary.style.display = "none";
+        if (captionEl)  captionEl.style.display  = "none";
+        if (nonMac)     nonMac.style.display      = "flex";
+        return;
+      }
+
+      /* Mac visitor */
+      if (nonMac) nonMac.style.display = "none";
+      if (btnPrimary) {
+        btnPrimary.style.display = "inline-flex";
+        btnPrimary.href          = arm ? urls.arm   : urls.arm;   // arm as default
+        btnPrimary.dataset.track = arm ? "download-arm64" : "download-arm64";
+      }
+      /* Always show intel fallback for Mac visitors unless confirmed arm */
+      if (btnIntel) btnIntel.style.display = arm ? "none" : "inline";
+    }
+
+    /* ── Umami event tracking ── */
+    function setupTracking() {
+      document.querySelectorAll("[data-track]").forEach(el => {
+        el.addEventListener("click", () => {
+          const ev = el.dataset.track;
+          if (ev && window.umami?.track) {
+            window.umami.track(ev, { source: "landing", lang: document.documentElement.lang });
+          }
+        });
+      });
+    }
+
+    /* ── Scroll-reveal animations ── */
+    function setupAnimations() {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        document.querySelectorAll(".up").forEach(el => el.classList.add("show"));
+        return;
+      }
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) { e.target.classList.add("show"); obs.unobserve(e.target); }
+        });
+      }, { threshold: 0.14 });
+      document.querySelectorAll(".up").forEach(el => obs.observe(el));
+    }
+
+    /* ── Init ── */
+    (async () => {
+      applyLang(getLang());
+      await fetchLatest();
+      setupDownloads();
+      setupTracking();
+      setupAnimations();
+    })();
+  </script>
+</body>
 </html>
