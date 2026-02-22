@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ClipStack — Copy less. Ship more.</title>
-  <meta name="description" content="ClipStack — the minimal clipboard history app for Mac. Instant access from the menu bar. Private by default, no account needed.">
+  <title>ClipStack — Free Clipboard History for Mac</title>
+  <meta name="description" content="ClipStack is a free clipboard history app for Mac. Lives in your menu bar — access everything you've ever copied in one click. No account, no cloud, no cookies.">
   <meta name="robots" content="index,follow">
   <meta name="theme-color" content="#ffffff">
   <link rel="canonical" href="https://clipstack.app/">
@@ -12,13 +12,13 @@
   <link rel="alternate" hreflang="en" href="https://clipstack.app/?lang=en">
   <link rel="alternate" hreflang="x-default" href="https://clipstack.app/">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="ClipStack — Copy less. Ship more.">
-  <meta property="og:description" content="The minimal clipboard manager for Mac. Lives in your menu bar.">
+  <meta property="og:title" content="ClipStack — Free Clipboard History for Mac">
+  <meta property="og:description" content="A free clipboard history app that lives in your Mac menu bar. Access every copy instantly, no account needed.">
   <meta property="og:url" content="https://clipstack.app/">
   <meta property="og:image" content="https://clipstack.app/assets/logo.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ClipStack — Copy less. Ship more.">
-  <meta name="twitter:description" content="The minimal clipboard manager for Mac. Lives in your menu bar.">
+  <meta name="twitter:title" content="ClipStack — Free Clipboard History for Mac">
+  <meta name="twitter:description" content="A free clipboard history app that lives in your Mac menu bar. Access every copy instantly, no account needed.">
   <meta name="twitter:image" content="https://clipstack.app/assets/logo.png">
   <link rel="icon" href="./assets/logo.png">
   <script defer src="https://analytics.glossardi.de/script.js" data-website-id="c230ce3d-9704-46bc-9e3d-ae3bb1f35633"></script>
@@ -27,653 +27,648 @@
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "ClipStack",
+    "description": "A free clipboard history app for Mac that lives in the menu bar. Access your full copy history instantly.",
     "applicationCategory": "ProductivityApplication",
-    "operatingSystem": "macOS",
+    "operatingSystem": "macOS 13+",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
     "downloadUrl": [
       "https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_aarch64.dmg",
       "https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_x64.dmg"
     ],
-    "creator": { "@type": "Person", "name": "Simon" }
+    "author": { "@type": "Person", "name": "Simon Busshart" }
   }
   </script>
   <style>
-    /* ─── RESET ─────────────────────────────────────────────── */
+    /* ── RESET ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* ─── TOKENS ─────────────────────────────────────────────── */
+    /* ── TOKENS ── */
     :root {
-      --bg:        #ffffff;
-      --bg-2:      #f5f5f7;
-      --text:      #1d1d1f;
-      --text-2:    #6e6e73;
-      --text-3:    #ababab;
-      --border:    #d2d2d7;
-      --border-2:  rgba(0,0,0,.06);
-      --btn:       #1d1d1f;
-      --btn-h:     #3a3a3c;
-      --r-btn:     980px;
-      --r-card:    20px;
-      --ease:      cubic-bezier(.25,.1,.25,1);
+      --bg:    #ffffff;
+      --bg2:   #f5f5f7;
+      --text:  #1d1d1f;
+      --text2: #6e6e73;
+      --text3: #ababab;
+      --sep:   #e5e5ea;
+      --btn:   #1d1d1f;
+      --ease:  cubic-bezier(.25,.1,.25,1);
     }
 
-    /* ─── BASE ───────────────────────────────────────────────── */
+    /* ── BASE ── */
     html { color-scheme: light; scroll-behavior: smooth; }
     body {
       font-family: -apple-system, "Helvetica Neue", sans-serif;
       background: var(--bg);
       color: var(--text);
       -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
       line-height: 1.5;
     }
-    a { color: inherit; }
 
-    /* ─── LAYOUT ─────────────────────────────────────────────── */
-    .wrap {
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
+    /* ── LAYOUT ── */
+    .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
 
-    /* ─── HERO ───────────────────────────────────────────────── */
-    .hero {
-      padding: 96px 0 80px;
-      text-align: center;
-    }
+    /* ── HERO ── */
+    .hero { padding: 88px 0 52px; text-align: center; }
+
     .hero-icon {
-      width: 104px;
-      height: 104px;
-      border-radius: 24px;
-      margin: 0 auto 28px;
+      width: 96px; height: 96px;
+      border-radius: 22px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.13), 0 2px 8px rgba(0,0,0,.07);
+      margin: 0 auto 26px;
       display: block;
-      box-shadow: 0 8px 32px rgba(0,0,0,.14), 0 2px 6px rgba(0,0,0,.08);
-      transition: transform .4s var(--ease);
       user-select: none;
+      transition: transform .45s var(--ease);
     }
-    .hero-icon:hover { transform: scale(1.05) translateY(-2px); }
-    .hero-eyebrow {
-      font-size: 15px;
-      font-weight: 500;
-      color: var(--text-2);
-      letter-spacing: .01em;
+    .hero-icon:hover { transform: scale(1.05) translateY(-3px); }
+
+    .eyebrow {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text3);
+      letter-spacing: .08em;
+      text-transform: uppercase;
       margin-bottom: 14px;
     }
+
     h1 {
-      font-size: clamp(48px, 9vw, 88px);
+      font-size: clamp(44px, 8.5vw, 82px);
       font-weight: 700;
-      line-height: 1.03;
+      line-height: 1.04;
       letter-spacing: -0.04em;
       margin-bottom: 20px;
     }
+
     .hero-sub {
-      font-size: 19px;
-      line-height: 1.55;
-      color: var(--text-2);
-      max-width: 440px;
-      margin: 0 auto 44px;
+      font-size: 18px;
+      color: var(--text2);
+      max-width: 430px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
       letter-spacing: -.01em;
     }
 
     /* CTA */
-    .cta-stack {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-    }
+    .cta { display: flex; flex-direction: column; align-items: center; gap: 11px; }
+
     .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      background: var(--btn);
-      color: #fff;
-      font-family: inherit;
-      font-size: 16px;
-      font-weight: 600;
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--btn); color: #fff;
+      font-family: inherit; font-size: 15px; font-weight: 600;
       letter-spacing: -.01em;
       padding: 13px 26px;
-      border-radius: var(--r-btn);
-      border: none;
-      cursor: pointer;
+      border-radius: 980px; border: none; cursor: pointer;
       text-decoration: none;
       transition: background .2s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease);
       box-shadow: 0 1px 4px rgba(0,0,0,.18);
     }
-    .btn:hover {
-      background: var(--btn-h);
-      transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(0,0,0,.2);
-    }
-    .btn:active { transform: translateY(0); }
+    .btn:hover { background: #3a3a3c; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,.2); }
+    .btn:active { transform: none; }
     .btn svg { flex-shrink: 0; }
 
-    .cta-caption {
-      font-size: 12px;
-      color: var(--text-3);
-      letter-spacing: .01em;
-    }
-    .cta-alt {
-      font-size: 13px;
-      color: var(--text-2);
-      text-decoration: none;
-    }
-    .cta-alt:hover { text-decoration: underline; }
-    .non-mac { display: none; gap: 16px; }
-    .non-mac a {
-      font-size: 13px;
-      color: var(--text-2);
-      text-decoration: none;
-    }
+    .cta-caption { font-size: 12px; color: var(--text3); letter-spacing: .01em; }
+    .cta-sub { font-size: 13px; color: var(--text2); text-decoration: none; }
+    .cta-sub:hover { text-decoration: underline; }
+    .non-mac { display: none; gap: 14px; }
+    .non-mac a { font-size: 13px; color: var(--text2); text-decoration: none; }
     .non-mac a:hover { text-decoration: underline; }
 
-    /* ─── PREVIEW ────────────────────────────────────────────── */
-    .preview {
-      padding-bottom: 96px;
+    /* scroll hint */
+    .hint {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 6px 0 44px; gap: 5px;
+      color: var(--text3); font-size: 11px; letter-spacing: .05em; text-transform: uppercase;
     }
-    .preview-box {
-      background: var(--bg-2);
-      border-radius: 28px;
-      padding: 64px 40px 0;
-      text-align: center;
+    .hint-arrow { animation: bob 2s ease-in-out infinite; }
+    @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(5px)} }
+
+    /* ── MAC PREVIEW ── */
+    .preview { padding-bottom: 96px; }
+
+    .mac-shell {
+      border-radius: 14px;
       overflow: hidden;
-    }
-    .preview-box h2 {
-      font-size: clamp(28px, 5vw, 48px);
-      font-weight: 700;
-      letter-spacing: -.03em;
-      line-height: 1.08;
-      margin-bottom: 10px;
-    }
-    .preview-box .sub {
-      font-size: 16px;
-      color: var(--text-2);
-      margin-bottom: 48px;
+      background: linear-gradient(160deg, #1c1c1e 0%, #2c2c2e 100%);
+      box-shadow: 0 28px 80px rgba(0,0,0,.22), 0 0 0 1px rgba(255,255,255,.06);
     }
 
-    /* macOS popover mock */
-    .popover {
-      max-width: 310px;
-      margin: 0 auto;
-      background: rgba(255,255,255,.95);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border-radius: 14px;
-      box-shadow: 0 12px 48px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.07);
-      overflow: hidden;
-      text-align: left;
+    /* menu bar */
+    .mbar {
+      height: 26px;
+      background: rgba(236,236,238,.92);
+      display: flex; align-items: center;
+      padding: 0 12px;
+      border-bottom: 1px solid rgba(0,0,0,.1);
+    }
+    .mbar-l { display: flex; align-items: center; gap: 12px; flex: 1; }
+    .mbar-apple { font-size: 13px; color: #1d1d1f; }
+    .mbar-appname { font-size: 12px; font-weight: 600; color: #1d1d1f; }
+    .mbar-menus { display: flex; gap: 10px; font-size: 12px; color: #3d3d3f; }
+    .mbar-r { display: flex; align-items: center; gap: 5px; }
+    .mbar-time { font-size: 12px; font-weight: 500; color: #1d1d1f; margin-right: 2px; }
+    .mbar-chip {
+      font-size: 11px; color: #3d3d3f; padding: 1px 5px;
+      border-radius: 4px; background: rgba(0,0,0,.06);
+    }
+    .mbar-cs {
+      display: flex; align-items: center;
+      background: rgba(0,0,0,.65); color: #fff;
+      border-radius: 4px; padding: 1px 5px;
+      gap: 3px; font-size: 11px; font-weight: 500;
+    }
+    .mbar-cs img { width: 13px; height: 13px; border-radius: 2px; }
+
+    /* popover area */
+    .desktop {
+      display: flex; justify-content: flex-end;
+      padding: 0 40px 48px;
       position: relative;
     }
-    .popover-bar {
-      padding: 9px 12px 7px;
-      border-bottom: 1px solid var(--border-2);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    /* triangle caret pointing up toward active icon */
+    .desktop::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 55px;
+      width: 0; height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-bottom: 7px solid rgba(255,255,255,.97);
     }
-    .popover-name {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-2);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-    }
-    .popover-count {
-      font-size: 11px;
-      color: var(--text-3);
-    }
-    .popover-search {
-      margin: 7px 10px;
-      background: #ebebf0;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      padding: 5px 9px;
-    }
-    .popover-search span {
-      font-size: 12px;
-      color: var(--text-3);
-    }
-    .popover-items { padding: 4px 6px 10px; }
-    .pi {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      padding: 6px 8px;
-      border-radius: 8px;
-      cursor: default;
-    }
-    .pi:first-child { background: rgba(0,122,255,.09); }
-    .pi-icon {
-      width: 30px; height: 30px;
-      border-radius: 7px;
-      background: #e8e8ed;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-    .pi:first-child .pi-icon { background: rgba(0,122,255,.15); }
-    .pi-label {
-      font-size: 12.5px;
-      color: var(--text);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-weight: 400;
-    }
-    .pi:first-child .pi-label { font-weight: 500; }
-    .pi-time { font-size: 10.5px; color: var(--text-3); margin-top: 1px; }
 
-    /* ─── FEATURES ───────────────────────────────────────────── */
-    .features { padding: 80px 0 96px; }
-    .features-headline {
-      text-align: center;
-      font-size: clamp(26px, 4vw, 40px);
-      font-weight: 700;
-      letter-spacing: -.03em;
-      margin-bottom: 52px;
+    /* the popover itself — matching the screenshot style */
+    .pop {
+      margin-top: 7px;
+      width: 340px;
+      background: rgba(255,255,255,.97);
+      border-radius: 12px;
+      box-shadow: 0 4px 32px rgba(0,0,0,.24), 0 0 0 1px rgba(0,0,0,.07);
+      overflow: hidden;
+      font-size: 13px;
+      position: relative;
     }
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
+
+    /* scroll bar visual */
+    .pop::after {
+      content: '';
+      position: absolute;
+      top: 56px; right: 3px; bottom: 8px;
+      width: 4px; border-radius: 4px;
+      background: rgba(0,0,0,.12);
     }
-    .feat {
-      background: var(--bg-2);
-      border-radius: var(--r-card);
-      padding: 30px 26px;
+
+    .pop-head {
+      padding: 14px 14px 4px;
+      display: flex; align-items: flex-start; justify-content: space-between;
     }
-    .feat-icon {
-      width: 42px; height: 42px;
-      background: #fff;
-      border-radius: 11px;
+    .pop-title { font-size: 18px; font-weight: 700; color: #1d1d1f; line-height: 1.2; }
+    .pop-count { font-size: 12px; color: #8e8e93; margin-top: 2px; }
+    .pop-close {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #e5e5ea; border: none; cursor: default;
       display: flex; align-items: center; justify-content: center;
-      margin-bottom: 18px;
+      font-size: 14px; color: #8e8e93; flex-shrink: 0; margin-top: 2px;
+    }
+
+    .pop-items { padding: 8px 0 6px; }
+
+    .pi {
+      padding: 10px 14px;
+      border-top: 1px solid #f2f2f7;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px; cursor: default;
+    }
+    .pi:first-child { border-top: none; }
+
+    .pi-body { flex: 1; min-width: 0; }
+    .pi-text {
+      font-size: 14px; color: #1d1d1f;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      line-height: 1.35;
+    }
+    .pi-meta { font-size: 11.5px; color: #8e8e93; margin-top: 3px; }
+
+    .pi-x {
+      flex-shrink: 0;
+      font-size: 16px; color: #c7c7cc;
+      background: none; border: none; cursor: default;
+      width: 20px; height: 20px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+    }
+
+    /* ── FEATURES ── */
+    .features { padding: 72px 0 88px; }
+    .feat-head {
+      text-align: center;
+      font-size: clamp(24px, 4vw, 36px);
+      font-weight: 700; letter-spacing: -.03em;
+      margin-bottom: 44px;
+    }
+    .feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+    .feat {
+      background: var(--bg2); border-radius: 18px;
+      padding: 28px 24px;
+    }
+    .feat-ico {
+      width: 40px; height: 40px;
+      background: #fff; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
       box-shadow: 0 2px 8px rgba(0,0,0,.09);
     }
-    .feat-icon svg {
-      width: 20px; height: 20px;
-      stroke: var(--text);
-      fill: none;
-      stroke-width: 1.8;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-    .feat h3 {
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: -.02em;
-      margin-bottom: 7px;
-    }
-    .feat p {
-      font-size: 14px;
-      color: var(--text-2);
-      line-height: 1.55;
-      letter-spacing: -.01em;
-    }
+    .feat-ico svg { width: 19px; height: 19px; stroke: var(--text); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .feat h3 { font-size: 15px; font-weight: 600; letter-spacing: -.02em; margin-bottom: 7px; }
+    .feat p  { font-size: 14px; color: var(--text2); line-height: 1.55; }
 
-    /* ─── FOOTER ─────────────────────────────────────────────── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 28px 0;
+    /* ── FOOTER ── */
+    footer { border-top: 1px solid var(--sep); padding: 24px 0 32px; }
+    .foot-row {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 8px;
     }
-    .footer-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .footer-left {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      font-size: 12px;
-      color: var(--text-3);
-    }
-    .footer-logo { width: 18px; height: 18px; border-radius: 4px; }
-    .footer-links { display: flex; gap: 18px; }
-    .footer-links a {
-      font-size: 12px;
-      color: var(--text-3);
-      text-decoration: none;
-    }
-    .footer-links a:hover { color: var(--text-2); }
+    .foot-l { display: flex; align-items: center; gap: 9px; font-size: 12px; color: var(--text3); }
+    .foot-logo { width: 18px; height: 18px; border-radius: 4px; }
 
-    /* ─── ANIMATIONS ─────────────────────────────────────────── */
-    .up {
-      opacity: 0;
-      transform: translateY(18px);
-      transition: opacity .55s var(--ease), transform .55s var(--ease);
+    /* Impressum <details> */
+    details.impr { margin-top: 14px; }
+    details.impr summary {
+      font-size: 12px; color: var(--text3);
+      cursor: pointer; list-style: none;
+      display: inline-flex; align-items: center; gap: 3px;
     }
-    .up.show { opacity: 1; transform: translateY(0); }
+    details.impr summary::-webkit-details-marker { display: none; }
+    details.impr[open] summary { color: var(--text2); }
+    details.impr summary:hover { color: var(--text2); }
+    .impr-body {
+      margin-top: 10px;
+      font-size: 12px; color: var(--text2);
+      line-height: 1.75;
+    }
+    .impr-body a { color: var(--text2); text-decoration: none; }
+    .impr-body a:hover { text-decoration: underline; }
+
+    /* ── ANIMATIONS ── */
+    .up { opacity: 0; transform: translateY(16px); transition: opacity .5s var(--ease), transform .5s var(--ease); }
+    .up.show { opacity: 1; transform: none; }
     .up:nth-child(2) { transition-delay: .08s; }
     .up:nth-child(3) { transition-delay: .16s; }
 
-    /* ─── RESPONSIVE ─────────────────────────────────────────── */
-    @media (max-width: 740px) {
-      .hero { padding: 64px 0 60px; }
-      h1 { font-size: 44px; }
-      .hero-sub { font-size: 17px; }
-      .preview-box { padding: 48px 24px 0; border-radius: 20px; }
-      .features-grid { grid-template-columns: 1fr; }
-      .features { padding: 60px 0 72px; }
+    /* ── RESPONSIVE ── */
+    @media (max-width: 720px) {
+      .hero { padding: 60px 0 40px; }
+      h1 { font-size: 40px; }
+      .hero-sub { font-size: 16px; }
+      .feat-grid { grid-template-columns: 1fr; }
+      .features { padding: 52px 0 64px; }
+      .desktop { justify-content: center; padding: 0 16px 36px; }
+      .pop { width: 100%; max-width: 320px; }
       .btn { width: 100%; justify-content: center; }
+      .mbar-menus { display: none; }
     }
     @media (prefers-reduced-motion: reduce) {
       .up { opacity: 1; transform: none; transition: none; }
-      .btn, .hero-icon { transition: none; }
+      .btn, .hero-icon, .hint-arrow { transition: none; animation: none; }
     }
   </style>
 </head>
 <body>
 
-  <!-- ── HERO ───────────────────────────────────────────────────── -->
-  <section class="hero">
-    <div class="wrap">
-      <img class="hero-icon" src="./assets/logo.png" alt="ClipStack app icon">
-      <p class="hero-eyebrow" data-i18n="eyebrow">Clipboard manager for Mac</p>
-      <h1 data-i18n="headline">Copy less.<br>Ship more.</h1>
-      <p class="hero-sub" data-i18n="sub">
-        The minimal clipboard manager that lives in your menu bar.
-        Always there, never in the way.
-      </p>
+<!-- ── HERO ─────────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="wrap">
+    <img class="hero-icon" src="./assets/logo.png" alt="ClipStack">
+    <p class="eyebrow" data-i18n="eyebrow">Clipboard History for Mac</p>
+    <h1 data-i18n="h1">Everything you<br>ever copied.</h1>
+    <p class="hero-sub" data-i18n="sub">
+      ClipStack keeps your entire clipboard history right in your menu bar.
+      One click — every copy, instantly back.
+    </p>
+    <div class="cta">
+      <a class="btn" id="btn-p" href="#" data-track="">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="7.5" y1="1" x2="7.5" y2="10.5"/>
+          <polyline points="3.5 6.5 7.5 10.5 11.5 6.5"/>
+          <line x1="1.5" y1="13.5" x2="13.5" y2="13.5"/>
+        </svg>
+        <span data-i18n="dlMac">Download for Mac</span>
+      </a>
+      <p class="cta-caption" data-i18n="caption">macOS 13 or later &nbsp;·&nbsp; Free &nbsp;·&nbsp; No account needed</p>
+      <a class="cta-sub" id="btn-i" href="#" data-track="download-x64" data-i18n="intelHint" style="display:none">
+        On an Intel Mac? Download here →
+      </a>
+      <div class="non-mac" id="non-mac">
+        <a href="#" id="nm-arm"   data-track="download-arm64" data-i18n="dlArm">Apple Silicon</a>
+        <a href="#" id="nm-intel" data-track="download-x64"   data-i18n="dlIntel">Intel Mac</a>
+      </div>
+    </div>
+  </div>
+</section>
 
-      <div class="cta-stack">
-        <!-- Primary CTA — configured by JS -->
-        <a class="btn" id="btn-primary" href="#" data-track="">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="8" y1="2" x2="8" y2="12"/>
-            <polyline points="4 8 8 12 12 8"/>
-          </svg>
-          <span data-i18n="dlMac">Download for Mac</span>
-        </a>
-        <p class="cta-caption" data-i18n="caption">macOS 13 or later &nbsp;·&nbsp; Free &nbsp;·&nbsp; No account needed</p>
-        <a class="cta-alt" id="btn-intel" href="#" data-track="download-x64" data-i18n="intelHint" style="display:none">
-          On an Intel Mac? Download here →
-        </a>
-        <div class="non-mac" id="non-mac">
-          <a href="#" id="nm-arm" data-track="download-arm64" data-i18n="dlArm">Apple Silicon</a>
-          <a href="#" id="nm-intel" data-track="download-x64" data-i18n="dlIntel">Intel Mac</a>
+<!-- scroll hint -->
+<div class="hint" aria-hidden="true">
+  <svg class="hint-arrow" width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="9" y1="3" x2="9" y2="14"/><polyline points="5 10 9 14 13 10"/>
+  </svg>
+</div>
+
+<!-- ── MAC PREVIEW ─────────────────────────────────────────────────── -->
+<section class="preview">
+  <div class="wrap">
+    <div class="mac-shell">
+
+      <!-- macOS menu bar -->
+      <div class="mbar">
+        <div class="mbar-l">
+          <span class="mbar-apple">&#63743;</span>
+          <span class="mbar-appname">Finder</span>
+          <div class="mbar-menus"><span>File</span><span>Edit</span><span>View</span><span>Go</span></div>
+        </div>
+        <div class="mbar-r">
+          <span class="mbar-time" id="mock-time">14:35</span>
+          <span class="mbar-chip">&#9651; 82%</span>
+          <span class="mbar-chip">&#8984;</span>
+          <!-- ClipStack active in menu bar -->
+          <span class="mbar-cs">
+            <img src="./assets/logo.png" alt="ClipStack">
+          </span>
+        </div>
+      </div>
+
+      <!-- desktop + popover -->
+      <div class="desktop">
+        <!-- popover — styled to match the screenshot exactly -->
+        <div class="pop" role="img" aria-label="ClipStack showing clipboard history with recent items">
+          <div class="pop-head">
+            <div>
+              <div class="pop-title">ClipStack</div>
+              <div class="pop-count">50 items</div>
+            </div>
+            <div class="pop-close" aria-hidden="true">&#215;</div>
+          </div>
+          <div class="pop-items">
+            <div class="pi">
+              <div class="pi-body">
+                <div class="pi-text">git commit -m "feat: add clipboard history"</div>
+                <div class="pi-meta">Text &middot; Just now</div>
+              </div>
+              <div class="pi-x" aria-hidden="true">&#215;</div>
+            </div>
+            <div class="pi">
+              <div class="pi-body">
+                <div class="pi-text">https://linear.app/issues/SHIP-204/clipboard-review</div>
+                <div class="pi-meta">Text &middot; 3m</div>
+              </div>
+              <div class="pi-x" aria-hidden="true">&#215;</div>
+            </div>
+            <div class="pi">
+              <div class="pi-body">
+                <div class="pi-text">Let's hop on a call at 3pm? I'll share the link.</div>
+                <div class="pi-meta">Text &middot; 12m</div>
+              </div>
+              <div class="pi-x" aria-hidden="true">&#215;</div>
+            </div>
+            <div class="pi">
+              <div class="pi-body">
+                <div class="pi-text">sk-proj-xKd8mAb3cDef…</div>
+                <div class="pi-meta">Text &middot; 41m</div>
+              </div>
+              <div class="pi-x" aria-hidden="true">&#215;</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ── APP PREVIEW ────────────────────────────────────────────── -->
-  <section class="preview">
-    <div class="wrap">
-      <div class="preview-box">
-        <h2 data-i18n="previewTitle">Your clipboard,<br>always within reach.</h2>
-        <p class="sub" data-i18n="previewSub">One shortcut. Every clip you've ever copied, instantly.</p>
+<!-- ── FEATURES ───────────────────────────────────────────────────── -->
+<section class="features">
+  <div class="wrap">
+    <h2 class="feat-head" data-i18n="featTitle">Built for calm productivity.</h2>
+    <div class="feat-grid">
 
-        <!-- Menu bar popover mock -->
-        <div class="popover" role="img" aria-label="ClipStack showing recent clipboard items">
-          <div class="popover-bar">
-            <span class="popover-name">ClipStack</span>
-            <span class="popover-count">42 items</span>
-          </div>
-          <div class="popover-search">
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="#ababab" stroke-width="1.4" aria-hidden="true">
-              <circle cx="4.5" cy="4.5" r="3.5"/><line x1="7.5" y1="7.5" x2="10" y2="10"/>
-            </svg>
-            <span data-i18n="searchPH">Search clips…</span>
-          </div>
-          <div class="popover-items">
-            <div class="pi">
-              <div class="pi-icon">⌨️</div>
-              <div>
-                <div class="pi-label">npm run build</div>
-                <div class="pi-time">Just now</div>
-              </div>
-            </div>
-            <div class="pi">
-              <div class="pi-icon">🔗</div>
-              <div>
-                <div class="pi-label">https://docs.example.com/api/v2</div>
-                <div class="pi-time">3 min ago</div>
-              </div>
-            </div>
-            <div class="pi">
-              <div class="pi-icon">📝</div>
-              <div>
-                <div class="pi-label">Meet me at 14:00, 3rd floor</div>
-                <div class="pi-time">11 min ago</div>
-              </div>
-            </div>
-            <div class="pi">
-              <div class="pi-icon">🔑</div>
-              <div>
-                <div class="pi-label">sk-proj-xK9mAbcDef…</div>
-                <div class="pi-time">1 h ago</div>
-              </div>
-            </div>
-          </div>
+      <div class="feat up">
+        <div class="feat-ico">
+          <svg viewBox="0 0 24 24"><path d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13Z"/></svg>
         </div>
+        <h3 data-i18n="f1h">Instant recall</h3>
+        <p data-i18n="f1p">One click or shortcut from the menu bar — every copy you've ever made, instantly accessible.</p>
+      </div>
+
+      <div class="feat up">
+        <div class="feat-ico">
+          <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        </div>
+        <h3 data-i18n="f2h">Private by default</h3>
+        <p data-i18n="f2p">All clipboard data stays on your Mac. No cloud, no account, no tracking of any kind.</p>
+      </div>
+
+      <div class="feat up">
+        <div class="feat-ico">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 15.5"/></svg>
+        </div>
+        <h3 data-i18n="f3h">Zero setup</h3>
+        <p data-i18n="f3p">Download, open, done. No subscription, no configuration, no sign-up. Works immediately.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ─────────────────────────────────────────────────────── -->
+<!-- Analytics: Umami, cookieless — no consent banner required under GDPR -->
+<footer>
+  <div class="wrap">
+    <div class="foot-row">
+      <div class="foot-l">
+        <img class="foot-logo" src="./assets/logo.png" alt="">
+        <span data-i18n="copyright">&copy; 2025 Simon Busshart</span>
       </div>
     </div>
-  </section>
 
-  <!-- ── FEATURES ───────────────────────────────────────────────── -->
-  <section class="features">
-    <div class="wrap">
-      <h2 class="features-headline" data-i18n="featTitle">Built for calm productivity.</h2>
-      <div class="features-grid">
-
-        <div class="feat up">
-          <div class="feat-icon">
-            <svg viewBox="0 0 24 24"><path d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13Z"/></svg>
-          </div>
-          <h3 data-i18n="f1h">Instant access</h3>
-          <p data-i18n="f1p">One click or shortcut away from your menu bar — no window switching, no friction.</p>
-        </div>
-
-        <div class="feat up">
-          <div class="feat-icon">
-            <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-          </div>
-          <h3 data-i18n="f2h">Private by default</h3>
-          <p data-i18n="f2p">Stays on your Mac. No cloud, no sync, no tracking. Your data never leaves your device.</p>
-        </div>
-
-        <div class="feat up">
-          <div class="feat-icon">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 15.5"/></svg>
-          </div>
-          <h3 data-i18n="f3h">Zero friction</h3>
-          <p data-i18n="f3p">No account, no subscription, no setup. Download, open, and it just works.</p>
-        </div>
-
+    <details class="impr">
+      <summary data-i18n="impressum">Impressum</summary>
+      <div class="impr-body">
+        Simon Busshart<br>
+        Dasbacherweg 16<br>
+        65510 Idstein<br>
+        <span id="impr-email"></span>
       </div>
-    </div>
-  </section>
+    </details>
+  </div>
+</footer>
 
-  <!-- ── FOOTER ─────────────────────────────────────────────────── -->
-  <!-- Analytics: Umami, cookieless -->
-  <footer>
-    <div class="wrap">
-      <div class="footer-row">
-        <div class="footer-left">
-          <img class="footer-logo" src="./assets/logo.png" alt="">
-          <span data-i18n="copyright">© 2025 Simon · All rights reserved</span>
-        </div>
-        <div class="footer-links">
-          <a href="#" data-i18n="privacy">Privacy</a>
-          <a href="#" data-i18n="impressum">Impressum</a>
-        </div>
-      </div>
-    </div>
-  </footer>
+<!-- ── SCRIPT ─────────────────────────────────────────────────────── -->
+<script>
+  const FALLBACK = {
+    arm:   "https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_aarch64.dmg",
+    intel: "https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_x64.dmg"
+  };
 
-  <!-- ── SCRIPT ─────────────────────────────────────────────────── -->
-  <script>
-    const FALLBACK = {
-      arm:   "https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_aarch64.dmg",
-      intel: "https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_x64.dmg"
-    };
-
-    const T = {
-      en: {
-        eyebrow:     "Clipboard manager for Mac",
-        headline:    "Copy less.<br>Ship more.",
-        sub:         "The minimal clipboard manager that lives in your menu bar. Always there, never in the way.",
-        dlMac:       "Download for Mac",
-        dlArm:       "Apple Silicon",
-        dlIntel:     "Intel Mac",
-        intelHint:   "On an Intel Mac? Download here \u2192",
-        caption:     "macOS 13 or later \u00b7 Free \u00b7 No account needed",
-        previewTitle:"Your clipboard,<br>always within reach.",
-        previewSub:  "One shortcut. Every clip you\u2019ve ever copied, instantly.",
-        searchPH:    "Search clips\u2026",
-        featTitle:   "Built for calm productivity.",
-        f1h: "Instant access",       f1p: "One click or shortcut away from your menu bar \u2014 no window switching, no friction.",
-        f2h: "Private by default",   f2p: "Stays on your Mac. No cloud, no sync, no tracking. Your data never leaves your device.",
-        f3h: "Zero friction",        f3p: "No account, no subscription, no setup. Download, open, and it just works.",
-        privacy:   "Privacy",
-        impressum: "Impressum",
-        copyright: "\u00a9 2025 Simon \u00b7 All rights reserved",
-        aria:      "Download ClipStack for Mac"
-      },
-      de: {
-        eyebrow:     "Clipboard-Manager f\u00fcr Mac",
-        headline:    "Weniger kopieren.<br>Mehr schaffen.",
-        sub:         "Die minimalistische Clipboard-App in deiner Men\u00fcleiste. Immer dabei, nie im Weg.",
-        dlMac:       "Download f\u00fcr Mac",
-        dlArm:       "Apple Silicon",
-        dlIntel:     "Intel Mac",
-        intelHint:   "Intel Mac? Hier herunterladen \u2192",
-        caption:     "macOS 13 oder neuer \u00b7 Kostenlos \u00b7 Kein Account n\u00f6tig",
-        previewTitle:"Dein Clipboard,<br>immer griffbereit.",
-        previewSub:  "Ein Shortcut. Jeder Text, den du je kopiert hast, sofort.",
-        searchPH:    "Clips suchen\u2026",
-        featTitle:   "F\u00fcr ruhige Produktivit\u00e4t gebaut.",
-        f1h: "Sofortiger Zugriff",   f1p: "Ein Klick oder Shortcut gen\u00fcgt \u2014 direkt aus der Men\u00fcleiste, kein Fensterwechsel.",
-        f2h: "Privat by default",    f2p: "Alles bleibt auf deinem Mac. Keine Cloud, kein Sync, kein Tracking.",
-        f3h: "Zero Friction",        f3p: "Kein Account, kein Abo, kein Setup. Herunterladen, \u00f6ffnen, fertig.",
-        privacy:   "Datenschutz",
-        impressum: "Impressum",
-        copyright: "\u00a9 2025 Simon \u00b7 Alle Rechte vorbehalten",
-        aria:      "ClipStack f\u00fcr Mac herunterladen"
-      }
-    };
-
-    /* ── URL state ── */
-    const urls = { arm: FALLBACK.arm, intel: FALLBACK.intel };
-
-    /* ── DOM refs ── */
-    const btnPrimary  = document.getElementById("btn-primary");
-    const btnIntel    = document.getElementById("btn-intel");
-    const nonMac      = document.getElementById("non-mac");
-    const nmArm       = document.getElementById("nm-arm");
-    const nmIntel     = document.getElementById("nm-intel");
-    const captionEl   = document.querySelector(".cta-caption");
-
-    /* ── Language ── */
-    function getLang() {
-      const q = new URLSearchParams(location.search).get("lang");
-      if (q === "de" || q === "en") return q;
-      return (navigator.language || "").toLowerCase().startsWith("de") ? "de" : "en";
+  const T = {
+    en: {
+      eyebrow:   "Clipboard History for Mac",
+      h1:        "Everything you<br>ever copied.",
+      sub:       "ClipStack keeps your entire clipboard history right in your menu bar. One click \u2014 every copy, instantly back.",
+      dlMac:     "Download for Mac",
+      dlArm:     "Apple Silicon",
+      dlIntel:   "Intel Mac",
+      intelHint: "On an Intel Mac? Download here \u2192",
+      caption:   "macOS 13 or later \u00b7 Free \u00b7 No account needed",
+      featTitle: "Built for calm productivity.",
+      f1h: "Instant recall",       f1p: "One click or shortcut from the menu bar \u2014 every copy you\u2019ve ever made, instantly accessible.",
+      f2h: "Private by default",   f2p: "All clipboard data stays on your Mac. No cloud, no account, no tracking of any kind.",
+      f3h: "Zero setup",           f3p: "Download, open, done. No subscription, no configuration, no sign-up. Works immediately.",
+      impressum: "Impressum",
+      copyright: "\u00a9 2025 Simon Busshart",
+      aria:      "Download ClipStack \u2014 free clipboard history app for Mac"
+    },
+    de: {
+      eyebrow:   "Clipboard-Verlauf f\u00fcr den Mac",
+      h1:        "Alles was du<br>je kopiert hast.",
+      sub:       "ClipStack speichert deinen gesamten Clipboard-Verlauf in der Men\u00fcleiste. Ein Klick \u2014 alles sofort zur\u00fcck.",
+      dlMac:     "Download f\u00fcr Mac",
+      dlArm:     "Apple Silicon",
+      dlIntel:   "Intel Mac",
+      intelHint: "Intel Mac? Hier herunterladen \u2192",
+      caption:   "macOS 13 oder neuer \u00b7 Kostenlos \u00b7 Kein Account n\u00f6tig",
+      featTitle: "F\u00fcr ruhige Produktivit\u00e4t gebaut.",
+      f1h: "Sofortiger Zugriff",   f1p: "Ein Klick oder Shortcut aus der Men\u00fcleiste \u2014 alles was du je kopiert hast, sofort griffbereit.",
+      f2h: "Privat by default",    f2p: "Alle Daten bleiben auf deinem Mac. Keine Cloud, kein Account, kein Tracking.",
+      f3h: "Zero Setup",           f3p: "Herunterladen, \u00f6ffnen, fertig. Kein Abo, keine Anmeldung, keine Konfiguration.",
+      impressum: "Impressum",
+      copyright: "\u00a9 2025 Simon Busshart",
+      aria:      "ClipStack herunterladen \u2014 kostenloser Clipboard-Verlauf f\u00fcr Mac"
     }
+  };
 
-    function applyLang(lang) {
-      const t = T[lang] || T.en;
-      document.documentElement.lang = lang;
-      document.title = lang === "de"
-        ? "ClipStack \u2014 Weniger kopieren. Mehr schaffen."
-        : "ClipStack \u2014 Copy less. Ship more.";
-      document.querySelectorAll("[data-i18n]").forEach(el => {
-        const k = el.dataset.i18n;
-        if (t[k] != null) el.innerHTML = t[k];
+  const urls = { arm: FALLBACK.arm, intel: FALLBACK.intel };
+  const btnP  = document.getElementById("btn-p");
+  const btnI  = document.getElementById("btn-i");
+  const nonMac = document.getElementById("non-mac");
+  const nmArm  = document.getElementById("nm-arm");
+  const nmIntel= document.getElementById("nm-intel");
+  const capEl  = document.querySelector(".cta-caption");
+
+  /* Language */
+  function getLang() {
+    const q = new URLSearchParams(location.search).get("lang");
+    if (q === "de" || q === "en") return q;
+    return (navigator.language || "").toLowerCase().startsWith("de") ? "de" : "en";
+  }
+
+  function applyLang(lang) {
+    const t = T[lang] || T.en;
+    document.documentElement.lang = lang;
+    document.title = lang === "de"
+      ? "ClipStack \u2014 Kostenloser Clipboard-Verlauf f\u00fcr Mac"
+      : "ClipStack \u2014 Free Clipboard History for Mac";
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+      const k = el.dataset.i18n;
+      if (t[k] != null) el.innerHTML = t[k];
+    });
+    if (btnP) btnP.setAttribute("aria-label", t.aria);
+  }
+
+  /* Fetch real release asset URLs from GitHub API */
+  async function fetchLatest() {
+    try {
+      const r = await fetch(
+        "https://api.github.com/repos/Glossardi/ClipStack/releases/latest",
+        { headers: { Accept: "application/vnd.github+json" } }
+      );
+      if (!r.ok) return;
+      const data = await r.json();
+      (data.assets || []).forEach(a => {
+        if (/aarch64\.dmg$/i.test(a.name) && a.browser_download_url) urls.arm   = a.browser_download_url;
+        if (/x64\.dmg$/i.test(a.name)     && a.browser_download_url) urls.intel = a.browser_download_url;
       });
-      if (btnPrimary) btnPrimary.setAttribute("aria-label", t.aria);
+    } catch (_) { /* fall back to /latest redirect */ }
+  }
+
+  /* Arch detection — Apple Silicon still reports Intel in most browsers; safest: arm default + always show Intel link */
+  function isMac() {
+    return /macintosh|mac os x/i.test(navigator.userAgent);
+  }
+
+  /* Wire buttons */
+  function setupDownloads() {
+    if (nmArm)   nmArm.href   = urls.arm;
+    if (nmIntel) nmIntel.href = urls.intel;
+    if (btnI)    btnI.href    = urls.intel;
+
+    if (!isMac()) {
+      if (btnP)  btnP.style.display  = "none";
+      if (capEl) capEl.style.display = "none";
+      if (nonMac) nonMac.style.display = "flex";
+      return;
     }
 
-    /* ── Fetch real asset URLs from GitHub API ── */
-    async function fetchLatest() {
-      try {
-        const r = await fetch(
-          "https://api.github.com/repos/Glossardi/ClipStack/releases/latest",
-          { headers: { Accept: "application/vnd.github+json" } }
-        );
-        if (!r.ok) return;
-        const data = await r.json();
-        (data.assets || []).forEach(a => {
-          if (/aarch64\.dmg$/i.test(a.name) && a.browser_download_url) urls.arm   = a.browser_download_url;
-          if (/x64\.dmg$/i.test(a.name)     && a.browser_download_url) urls.intel = a.browser_download_url;
-        });
-      } catch (_) { /* silently fall back to /latest redirect */ }
+    if (nonMac) nonMac.style.display = "none";
+    if (btnP) {
+      btnP.href = urls.arm;
+      btnP.dataset.track = "download-arm64";
+      btnP.style.display = "inline-flex";
     }
+    /* Always show Intel fallback for Mac visitors (can't reliably detect AS via UA) */
+    if (btnI) btnI.style.display = "inline";
+  }
 
-    /* ── Architecture detection ── */
-    function getMacArch() {
-      const ua = navigator.userAgent.toLowerCase();
-      if (!/macintosh|mac os x/.test(ua)) return { mac: false };
-      if (/arm64|aarch64/.test(ua)) return { mac: true, arm: true };
-      return { mac: true, arm: false };  // Intel or unknown → show arm as primary + intel link
-    }
-
-    /* ── Wire download buttons ── */
-    function setupDownloads() {
-      if (nmArm)   nmArm.href   = urls.arm;
-      if (nmIntel) nmIntel.href = urls.intel;
-      if (btnIntel) btnIntel.href = urls.intel;
-
-      const { mac, arm } = getMacArch();
-
-      if (!mac) {
-        /* Non-Mac: hide primary, show both as text links */
-        if (btnPrimary) btnPrimary.style.display = "none";
-        if (captionEl)  captionEl.style.display  = "none";
-        if (nonMac)     nonMac.style.display      = "flex";
-        return;
-      }
-
-      /* Mac visitor */
-      if (nonMac) nonMac.style.display = "none";
-      if (btnPrimary) {
-        btnPrimary.style.display = "inline-flex";
-        btnPrimary.href          = arm ? urls.arm   : urls.arm;   // arm as default
-        btnPrimary.dataset.track = arm ? "download-arm64" : "download-arm64";
-      }
-      /* Always show intel fallback for Mac visitors unless confirmed arm */
-      if (btnIntel) btnIntel.style.display = arm ? "none" : "inline";
-    }
-
-    /* ── Umami event tracking ── */
-    function setupTracking() {
-      document.querySelectorAll("[data-track]").forEach(el => {
-        el.addEventListener("click", () => {
-          const ev = el.dataset.track;
-          if (ev && window.umami?.track) {
-            window.umami.track(ev, { source: "landing", lang: document.documentElement.lang });
-          }
-        });
+  /* Umami download event tracking */
+  function setupTracking() {
+    document.querySelectorAll("[data-track]").forEach(el => {
+      el.addEventListener("click", () => {
+        const ev = el.dataset.track;
+        if (ev && window.umami?.track) {
+          window.umami.track(ev, { lang: document.documentElement.lang });
+        }
       });
-    }
+    });
+  }
 
-    /* ── Scroll-reveal animations ── */
-    function setupAnimations() {
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        document.querySelectorAll(".up").forEach(el => el.classList.add("show"));
-        return;
-      }
-      const obs = new IntersectionObserver(entries => {
-        entries.forEach(e => {
-          if (e.isIntersecting) { e.target.classList.add("show"); obs.unobserve(e.target); }
-        });
-      }, { threshold: 0.14 });
-      document.querySelectorAll(".up").forEach(el => obs.observe(el));
+  /* Scroll-reveal */
+  function setupAnimations() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.querySelectorAll(".up").forEach(el => el.classList.add("show"));
+      return;
     }
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add("show"); obs.unobserve(e.target); }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll(".up").forEach(el => obs.observe(el));
+  }
 
-    /* ── Init ── */
-    (async () => {
-      applyLang(getLang());
-      await fetchLatest();
-      setupDownloads();
-      setupTracking();
-      setupAnimations();
-    })();
-  </script>
+  /* Impressum email — injected via JS so it can't be crawled */
+  function injectEmail() {
+    const el = document.getElementById("impr-email");
+    if (!el) return;
+    const a = document.createElement("a");
+    a.href = "mailto:" + ["info", "clipstack.click"].join("@");
+    a.textContent = ["info", "clipstack.click"].join("@");
+    el.appendChild(a);
+  }
+
+  /* Live clock in mock menu bar */
+  function setMockTime() {
+    const el = document.getElementById("mock-time");
+    if (!el) return;
+    const now = new Date();
+    el.textContent =
+      now.getHours().toString().padStart(2, "0") + ":" +
+      now.getMinutes().toString().padStart(2, "0");
+  }
+
+  /* Init */
+  (async () => {
+    applyLang(getLang());
+    setMockTime();
+    await fetchLatest();
+    setupDownloads();
+    setupTracking();
+    setupAnimations();
+    injectEmail();
+  })();
+</script>
 </body>
 </html>
