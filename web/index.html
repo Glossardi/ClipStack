@@ -128,11 +128,25 @@
     .cta-caption { font-size: 12px; color: var(--text3); letter-spacing: .01em; }
     .cta-sub { font-size: 13px; color: var(--text2); text-decoration: none; }
     .cta-sub:hover { text-decoration: underline; }
-    .gatekeeper-note {
-      font-size: 11.5px; color: var(--text3);
-      max-width: 320px; line-height: 1.55; text-align: center;
+    .gk-box {
+      margin-top: 18px;
+      background: #fffbeb; border: 1px solid #f0d060;
+      border-radius: 10px; padding: 14px 18px;
+      max-width: 360px; text-align: left;
     }
-    .gatekeeper-note strong { font-weight: 600; color: var(--text2); }
+    .gk-box summary {
+      font-size: 12.5px; font-weight: 600; color: #92600a;
+      cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px;
+    }
+    .gk-box summary::-webkit-details-marker { display: none; }
+    .gk-box ol {
+      margin: 10px 0 0 0; padding-left: 18px;
+      font-size: 12px; color: #78500a; line-height: 1.8;
+    }
+    .gk-box code {
+      background: #fef3c7; border-radius: 4px; padding: 1px 5px;
+      font-family: ui-monospace, monospace; font-size: 11px;
+    }
     .non-mac { display: none; gap: 14px; }
     .non-mac a { font-size: 13px; color: var(--text2); text-decoration: none; }
     .non-mac a:hover { text-decoration: underline; }
@@ -360,7 +374,14 @@
       <a class="cta-sub" id="btn-i" href="#" data-track="download-x64" data-i18n="intelHint" style="display:none">
         On an Intel Mac? Download here →
       </a>
-      <p class="gatekeeper-note" data-i18n="gatekeeperNote">macOS may warn "app is damaged" — right-click the app in Finder and choose <strong>Open</strong> to bypass Gatekeeper.</p>
+      <details class="gk-box" id="gk-box">
+        <summary id="gk-summary">macOS says "app is damaged"? Here's the fix.</summary>
+        <ol id="gk-steps">
+          <li>Open <strong>System Settings → Privacy &amp; Security</strong></li>
+          <li>Scroll down and click <strong>"Open Anyway"</strong> next to ClipStack</li>
+          <li><em>Or</em> in Terminal run: <code>xattr -cr ~/Downloads/ClipStack.dmg</code></li>
+        </ol>
+      </details>
       <div class="non-mac" id="non-mac">
         <a href="#" id="nm-arm"   data-track="download-arm64" data-i18n="dlArm">Apple Silicon</a>
         <a href="#" id="nm-intel" data-track="download-x64"   data-i18n="dlIntel">Intel Mac</a>
@@ -520,7 +541,10 @@
       dlIntel:   "Intel Mac",
       intelHint: "On an Intel Mac? Download here \u2192",
       caption:   "macOS 13 or later \u00b7 Free \u00b7 No account needed",
-      gatekeeperNote: "macOS may warn \u201capp is damaged\u201d \u2014 right-click the app in Finder and choose <strong>Open</strong> to bypass Gatekeeper.",
+      gkSummary: "macOS says \u201capp is damaged\u201d? Here\u2019s the fix.",
+      gkStep1: "Open <strong>System Settings \u2192 Privacy &amp; Security</strong>",
+      gkStep2: "Scroll down and click <strong>\u201cOpen Anyway\u201d</strong> next to ClipStack",
+      gkStep3: "<em>Or</em> in Terminal: <code>xattr -cr ~/Downloads/ClipStack.dmg</code>",
       featTitle: "Built for calm productivity.",
       f1h: "Instant recall",       f1p: "One click or shortcut from the menu bar \u2014 every copy you\u2019ve ever made, instantly accessible.",
       f2h: "Private by default",   f2p: "All clipboard data stays on your Mac. No cloud, no account, no tracking of any kind.",
@@ -538,7 +562,10 @@
       dlIntel:   "Intel Mac",
       intelHint: "Intel Mac? Hier herunterladen \u2192",
       caption:   "macOS 13 oder neuer \u00b7 Kostenlos \u00b7 Kein Account n\u00f6tig",
-      gatekeeperNote: "macOS zeigt evtl. \u201eBeschädigt\u201c \u2014 Rechtsklick auf die App im Finder, dann <strong>Öffnen</strong> wählen, um Gatekeeper zu umgehen.",
+      gkSummary: "macOS zeigt \u201eBeschädigt\u201c? So behebst du es.",
+      gkStep1: "<strong>Systemeinstellungen \u2192 Datenschutz &amp; Sicherheit</strong> öffnen",
+      gkStep2: "Nach unten scrollen, <strong>\u201eTrotzdem öffnen\u201c</strong> neben ClipStack klicken",
+      gkStep3: "<em>Oder</em> im Terminal: <code>xattr -cr ~/Downloads/ClipStack.dmg</code>",
       featTitle: "F\u00fcr ruhige Produktivit\u00e4t gebaut.",
       f1h: "Sofortiger Zugriff",   f1p: "Ein Klick oder Shortcut aus der Men\u00fcleiste \u2014 alles was du je kopiert hast, sofort griffbereit.",
       f2h: "Privat by default",    f2p: "Alle Daten bleiben auf deinem Mac. Keine Cloud, kein Account, kein Tracking.",
@@ -575,6 +602,12 @@
       if (t[k] != null) el.innerHTML = t[k];
     });
     if (btnP) btnP.setAttribute("aria-label", t.aria);
+    // Update Gatekeeper box
+    const gkSum = document.getElementById("gk-summary");
+    const gkSteps = document.getElementById("gk-steps");
+    if (gkSum && t.gkSummary) gkSum.innerHTML = t.gkSummary;
+    if (gkSteps && t.gkStep1) gkSteps.innerHTML =
+      `<li>${t.gkStep1}</li><li>${t.gkStep2}</li><li>${t.gkStep3}</li>`;
   }
 
   /* Fetch real release asset URLs from GitHub API */
@@ -608,6 +641,9 @@
       if (btnP)  btnP.style.display  = "none";
       if (capEl) capEl.style.display = "none";
       if (nonMac) nonMac.style.display = "flex";
+      // Hide Gatekeeper box on non-Mac (irrelevant)
+      const gkBox = document.getElementById("gk-box");
+      if (gkBox) gkBox.style.display = "none";
       return;
     }
 
