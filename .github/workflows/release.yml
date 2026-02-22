@@ -172,7 +172,7 @@ jobs:
             if [[ "${name}" == *aarch64* ]]; then
               cp "${dmg}" dist/ClipStack_latest_aarch64.dmg
               mapped=1
-            elif [[ "${name}" == *x86_64* ]]; then
+            elif [[ "${name}" == *x64* ]]; then
               cp "${dmg}" dist/ClipStack_latest_x64.dmg
               mapped=1
             fi
