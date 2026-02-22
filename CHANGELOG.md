@@ -6,16 +6,17 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+## [1.1.3] - 2026-02-22
+
 ### Fixed
-- Preflight now prefers the rustup toolchain (`~/.cargo/bin`) so local checks use the pinned Rust version from `rust-toolchain.toml`.
-- DMG packaging now also updates `Latest/ClipStack_latest_*.dmg` during local `build:macos:dmg` runs.
+- **CI: `publish_latest` Intel DMG never uploaded** — the shell pattern `*x86_64*` did not match Tauri's actual output filename `_x64`. Fixed to `*x64*`; Intel users now receive the correct DMG on every release.
+- **Missing "latest" release tag** — the `publish_latest` CI job was introduced after v1.1.2 was already released, so the `latest` tag on GitHub never existed. Created manually and will be maintained automatically going forward.
+- **macOS Gatekeeper notice on website** — added a clear instruction for users who see "app is damaged": right-click the app in Finder and choose Open.
 
 ### Changed
-- Added local CI-parity preflight scripts (`npm run ci:preflight`, `npm run release:preflight`) to catch release issues before push.
-- Optimized GitHub Actions runtime with npm cache, Rust cache, and concurrency cancel-in-progress.
-
-### Security
-- Added stronger local ignore rules for private notes/instructions and local signing material patterns.
+- Rebuilt download landing page (`web/`) with Apple-style design: prominent app icon, bold hero headline, authentic macOS menu-bar popover mock showing real clipboard history UI, bilingual DE/EN, Umami analytics, and cookieless footer.
+- Download buttons auto-detect Mac architecture and show the correct DMG as primary CTA; always show Intel fallback link.
+- Download links resolve via GitHub Releases API for the newest real asset URLs, falling back to stable `/latest/` redirect.
 
 ## [1.1.2] - 2026-02-20
 
