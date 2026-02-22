@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 concurrency:
   group: release-${{ github.ref }}
@@ -136,3 +137,50 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
+
+  publish_latest:
+    needs:
+      - version_check
+      - release
+    if: needs.version_check.outputs.release_needed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Sync latest DMGs for website downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.version_check.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_tag="v${VERSION}"
+
+          if gh release view latest >/dev/null 2>&1; then
+            echo "Using existing latest release."
+          else
+            gh release create latest --title "Latest" --notes "Auto-updated latest ClipStack DMGs."
+          fi
+
+          rm -rf dist
+          mkdir -p dist
+          gh release download "${source_tag}" --pattern "*.dmg" --dir dist
+
+          mapped=0
+          for dmg in dist/*.dmg; do
+            name="$(basename "${dmg}")"
+            if [[ "${name}" == *aarch64* ]]; then
+              cp "${dmg}" dist/ClipStack_latest_aarch64.dmg
+              mapped=1
+            elif [[ "${name}" == *x86_64* ]]; then
+              cp "${dmg}" dist/ClipStack_latest_x64.dmg
+              mapped=1
+            fi
+          done
+
+          if [[ "${mapped}" -ne 1 ]]; then
+            echo "No architecture-specific DMGs found on release ${source_tag}."
+            exit 1
+          fi
+
+          gh release upload latest dist/ClipStack_latest_*.dmg --clobber

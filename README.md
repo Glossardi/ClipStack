@@ -23,6 +23,8 @@ If Homebrew Rust is preferred in your shell, run:
 export PATH="$HOME/.cargo/bin:$PATH"
 ```
 
+The repo pins Rust via `rust-toolchain.toml` (`1.88.0`) for reproducible local/CI builds.
+
 ## Development
 
 ```bash
@@ -69,6 +71,18 @@ Outputs:
 3. Build and validate DMG: `npm run build:macos:dmg`
 4. Push to `main`: `git push origin main`
 5. GitHub Actions (`.github/workflows/release.yml`) creates signed artifacts and `latest.json`
+6. Workflow also syncs newest DMGs to release tag `latest` with stable asset names:
+   - `ClipStack_latest_aarch64.dmg`
+   - `ClipStack_latest_x64.dmg`
+
+### Publish Readiness for Website Downloads
+
+- Required repository secrets:
+  - `TAURI_SIGNING_PRIVATE_KEY`
+  - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
+- Stable website download URLs:
+  - `https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_aarch64.dmg`
+  - `https://github.com/Glossardi/ClipStack/releases/download/latest/ClipStack_latest_x64.dmg`
 
 ## Data & Privacy
 
