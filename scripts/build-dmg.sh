@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_BUNDLE="${ROOT_DIR}/src-tauri/target/release/bundle/macos/ClipStack.app"
 OUTPUT_DIR="${ROOT_DIR}/src-tauri/target/release/bundle/dmg"
+LATEST_DIR="${ROOT_DIR}/Latest"
 
 if [[ ! -d "${APP_BUNDLE}" ]]; then
   echo "App bundle not found: ${APP_BUNDLE}"
@@ -15,6 +16,12 @@ VERSION="$(grep -m1 '"version"' "${ROOT_DIR}/src-tauri/tauri.conf.json" | sed -E
 ARCH="$(uname -m)"
 DMG_NAME="ClipStack_${VERSION}_${ARCH}.dmg"
 DMG_PATH="${OUTPUT_DIR}/${DMG_NAME}"
+case "${ARCH}" in
+  arm64|aarch64) LATEST_ARCH="aarch64" ;;
+  x86_64|amd64) LATEST_ARCH="x64" ;;
+  *) LATEST_ARCH="${ARCH}" ;;
+esac
+LATEST_DMG_PATH="${LATEST_DIR}/ClipStack_latest_${LATEST_ARCH}.dmg"
 
 STAGING_DIR="$(mktemp -d "${TMPDIR:-/tmp}/clipstack-dmg.XXXXXX")"
 cleanup() {
@@ -22,7 +29,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-mkdir -p "${OUTPUT_DIR}"
+mkdir -p "${OUTPUT_DIR}" "${LATEST_DIR}"
 cp -R "${APP_BUNDLE}" "${STAGING_DIR}/ClipStack.app"
 ln -s /Applications "${STAGING_DIR}/Applications"
 
@@ -35,3 +42,5 @@ hdiutil create \
   "${DMG_PATH}" >/dev/null
 
 echo "Created DMG: ${DMG_PATH}"
+cp -f "${DMG_PATH}" "${LATEST_DMG_PATH}"
+echo "Updated latest DMG: ${LATEST_DMG_PATH}"

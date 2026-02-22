@@ -6,6 +6,10 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+### Fixed
+- Preflight now prefers the rustup toolchain (`~/.cargo/bin`) so local checks use the pinned Rust version from `rust-toolchain.toml`.
+- DMG packaging now also updates `Latest/ClipStack_latest_*.dmg` during local `build:macos:dmg` runs.
+
 ### Changed
 - Added local CI-parity preflight scripts (`npm run ci:preflight`, `npm run release:preflight`) to catch release issues before push.
 - Optimized GitHub Actions runtime with npm cache, Rust cache, and concurrency cancel-in-progress.

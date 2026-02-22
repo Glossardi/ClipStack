@@ -60,6 +60,7 @@ Outputs:
 
 - `src-tauri/target/release/bundle/macos/ClipStack.app`
 - `src-tauri/target/release/bundle/dmg/ClipStack_*.dmg`
+- `Latest/ClipStack_latest_*.dmg`
 
 ## Release Flow (Single Source of Truth)
 

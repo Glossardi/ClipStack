@@ -326,8 +326,8 @@ fn start_clipboard_monitor(state: ClipboardState, app_handle: AppHandle) {
         };
 
         loop {
-            if let Ok(content) = clipboard.get_text() {
-                if !content.trim().is_empty() {
+            match clipboard.get_text() {
+                Ok(content) if !content.trim().is_empty() => {
                     let should_capture = {
                         let mut last_seen = state.last_seen.lock().unwrap();
                         if last_seen.as_ref() == Some(&content) {
@@ -338,15 +338,14 @@ fn start_clipboard_monitor(state: ClipboardState, app_handle: AppHandle) {
                         }
                     };
 
-                    if should_capture {
-                        if upsert_clip_item(&state, content).is_some() {
-                            if let Err(err) = persist_items(&state) {
-                                eprintln!("failed to persist clipboard items: {err}");
-                            }
-                            emit_clipboard_updated(&app_handle);
+                    if should_capture && upsert_clip_item(&state, content).is_some() {
+                        if let Err(err) = persist_items(&state) {
+                            eprintln!("failed to persist clipboard items: {err}");
                         }
+                        emit_clipboard_updated(&app_handle);
                     }
                 }
+                _ => {}
             }
 
             thread::sleep(Duration::from_millis(CLIPBOARD_POLL_INTERVAL_MS));
