@@ -38,7 +38,9 @@ jobs:
             previous_version="$(git show HEAD~1:src-tauri/Cargo.toml 2>/dev/null | sed -nE 's/^version = "([^"]+)"/\1/p' | head -n1 || true)"
           fi
 
-          if [[ -n "${previous_version}" && "${previous_version}" == "${current_version}" ]]; then
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "release_needed=true" >> "${GITHUB_OUTPUT}"
+          elif [[ -n "${previous_version}" && "${previous_version}" == "${current_version}" ]]; then
             echo "release_needed=false" >> "${GITHUB_OUTPUT}"
           else
             echo "release_needed=true" >> "${GITHUB_OUTPUT}"
@@ -122,6 +124,9 @@ jobs:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
 
       - uses: Swatinem/rust-cache@v2
+
+      - name: Add cross-compilation targets
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
 
       - name: Install dependencies
         run: npm ci
