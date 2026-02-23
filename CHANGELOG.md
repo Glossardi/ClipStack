@@ -6,6 +6,12 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+## [1.1.4] - 2026-02-23
+
+### Fixed
+- **"App is damaged" Gatekeeper error** — the Rust linker was applying an incomplete `linker-signed` ad-hoc signature to the binary but Tauri was not re-sealing the full `.app` bundle resources. macOS detected the mismatched signature as cryptographically invalid and showed "damaged and can't be opened". Fixed by setting `APPLE_SIGNING_IDENTITY: "-"` in CI so `tauri-action` runs a proper `codesign --force --deep --sign -` after bundling, correctly sealing Info.plist and all resources.
+- **Download page Gatekeeper instructions** — "Open Anyway" in System Settings only works for Developer-ID-signed apps. For ad-hoc signed apps the correct fix is `xattr -cr ~/Downloads/ClipStack.dmg` in Terminal. Updated the website callout with the correct steps, now open by default.
+
 ## [1.1.3] - 2026-02-22
 
 ### Fixed
