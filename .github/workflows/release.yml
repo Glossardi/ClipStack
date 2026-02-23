@@ -135,20 +135,32 @@ jobs:
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: |
-          if [[ -n "$APPLE_CERTIFICATE" ]]; then
-            echo "Importing Developer ID certificate..."
-            echo "$APPLE_CERTIFICATE" | base64 --decode > /tmp/certificate.p12
-            security create-keychain -p "" build.keychain
-            security default-keychain -s build.keychain
-            security unlock-keychain -p "" build.keychain
-            security import /tmp/certificate.p12 -k build.keychain \
-              -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
-            security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
-            rm /tmp/certificate.p12
-            echo "Certificate imported."
-          else
+          if [[ -z "$APPLE_CERTIFICATE" ]]; then
             echo "No APPLE_CERTIFICATE — using ad-hoc signing."
+            exit 0
+          fi
+
+          echo "Importing certificate..."
+          echo "$APPLE_CERTIFICATE" | base64 --decode > /tmp/certificate.p12
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security import /tmp/certificate.p12 -k build.keychain \
+            -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+          rm /tmp/certificate.p12
+
+          echo "Identities available in keychain:"
+          security find-identity -v -p codesigning build.keychain
+
+          if security find-identity -v -p codesigning build.keychain | grep -qF "$APPLE_SIGNING_IDENTITY"; then
+            echo "Identity '$APPLE_SIGNING_IDENTITY' found — will use for signing."
+          else
+            echo "WARNING: Identity '$APPLE_SIGNING_IDENTITY' NOT found in keychain."
+            echo "Available identities listed above. Falling back to ad-hoc signing."
+            echo "APPLE_SIGNING_IDENTITY=-" >> "$GITHUB_ENV"
           fi
 
       - uses: tauri-apps/tauri-action@v0
