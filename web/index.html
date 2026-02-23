@@ -374,12 +374,12 @@
       <a class="cta-sub" id="btn-i" href="#" data-track="download-x64" data-i18n="intelHint" style="display:none">
         On an Intel Mac? Download here →
       </a>
-      <details class="gk-box" id="gk-box">
+      <details class="gk-box" id="gk-box" open>
         <summary id="gk-summary">macOS says "app is damaged"? Here's the fix.</summary>
         <ol id="gk-steps">
-          <li>Open <strong>System Settings → Privacy &amp; Security</strong></li>
-          <li>Scroll down and click <strong>"Open Anyway"</strong> next to ClipStack</li>
-          <li><em>Or</em> in Terminal run: <code>xattr -cr ~/Downloads/ClipStack.dmg</code></li>
+          <li>Open <strong>Terminal</strong> (search Spotlight for "Terminal")</li>
+          <li>Paste and run: <code>xattr -cr ~/Downloads/ClipStack.dmg</code></li>
+          <li>Open the DMG again — ClipStack will install normally</li>
         </ol>
       </details>
       <div class="non-mac" id="non-mac">
@@ -542,9 +542,9 @@
       intelHint: "On an Intel Mac? Download here \u2192",
       caption:   "macOS 13 or later \u00b7 Free \u00b7 No account needed",
       gkSummary: "macOS says \u201capp is damaged\u201d? Here\u2019s the fix.",
-      gkStep1: "Open <strong>System Settings \u2192 Privacy &amp; Security</strong>",
-      gkStep2: "Scroll down and click <strong>\u201cOpen Anyway\u201d</strong> next to ClipStack",
-      gkStep3: "<em>Or</em> in Terminal: <code>xattr -cr ~/Downloads/ClipStack.dmg</code>",
+      gkStep1: "Open <strong>Terminal</strong> (search Spotlight for \u201cTerminal\u201d)",
+      gkStep2: "Paste and run: <code>xattr -cr ~/Downloads/ClipStack.dmg</code>",
+      gkStep3: "Open the DMG again \u2014 ClipStack will install normally",
       featTitle: "Built for calm productivity.",
       f1h: "Instant recall",       f1p: "One click or shortcut from the menu bar \u2014 every copy you\u2019ve ever made, instantly accessible.",
       f2h: "Private by default",   f2p: "All clipboard data stays on your Mac. No cloud, no account, no tracking of any kind.",
@@ -563,9 +563,9 @@
       intelHint: "Intel Mac? Hier herunterladen \u2192",
       caption:   "macOS 13 oder neuer \u00b7 Kostenlos \u00b7 Kein Account n\u00f6tig",
       gkSummary: "macOS zeigt \u201eBeschädigt\u201c? So behebst du es.",
-      gkStep1: "<strong>Systemeinstellungen \u2192 Datenschutz &amp; Sicherheit</strong> öffnen",
-      gkStep2: "Nach unten scrollen, <strong>\u201eTrotzdem öffnen\u201c</strong> neben ClipStack klicken",
-      gkStep3: "<em>Oder</em> im Terminal: <code>xattr -cr ~/Downloads/ClipStack.dmg</code>",
+      gkStep1: "<strong>Terminal</strong> öffnen (Spotlight: \u201eTerminal\u201c)",
+      gkStep2: "Diesen Befehl ausführen: <code>xattr -cr ~/Downloads/ClipStack.dmg</code>",
+      gkStep3: "DMG erneut öffnen \u2014 ClipStack installiert sich normal",
       featTitle: "F\u00fcr ruhige Produktivit\u00e4t gebaut.",
       f1h: "Sofortiger Zugriff",   f1p: "Ein Klick oder Shortcut aus der Men\u00fcleiste \u2014 alles was du je kopiert hast, sofort griffbereit.",
       f2h: "Privat by default",    f2p: "Alle Daten bleiben auf deinem Mac. Keine Cloud, kein Account, kein Tracking.",
