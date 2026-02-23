@@ -137,7 +137,7 @@ jobs:
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         run: |
           if [[ -n "$APPLE_CERTIFICATE" ]]; then
-            echo "Importing Apple signing certificate into keychain..."
+            echo "Importing Developer ID certificate..."
             echo "$APPLE_CERTIFICATE" | base64 --decode > /tmp/certificate.p12
             security create-keychain -p "" build.keychain
             security default-keychain -s build.keychain
@@ -146,22 +146,20 @@ jobs:
               -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
             security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
             rm /tmp/certificate.p12
-            echo "Certificate imported successfully."
+            echo "Certificate imported."
           else
-            echo "No APPLE_CERTIFICATE secret set — will use ad-hoc signing (-)."
+            echo "No APPLE_CERTIFICATE — using ad-hoc signing."
           fi
 
+      # Notarization env vars (APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID) are intentionally
+      # omitted here. Passing them even as empty strings causes Tauri to attempt notarization
+      # and fail. Add them back once a Developer ID Application certificate is fully set up.
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          # Signing identity: "Developer ID Application: ..." when cert is imported above,
-          # or "-" for ad-hoc signing when APPLE_SIGNING_IDENTITY secret is not set.
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY || '-' }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: v__VERSION__
           releaseName: v__VERSION__
