@@ -174,7 +174,7 @@ jobs:
 
           rm -rf dist
           mkdir -p dist
-          gh release download "${source_tag}" --pattern "*.dmg" --dir dist
+          gh release download "${source_tag}" --pattern "*.dmg" --pattern "latest.json" --dir dist
 
           mapped=0
           for dmg in dist/*.dmg; do
@@ -193,4 +193,5 @@ jobs:
             exit 1
           fi
 
-          gh release upload latest dist/ClipStack_latest_*.dmg --clobber
+          # Upload DMGs + latest.json (updater endpoint) to the stable "latest" tag
+          gh release upload latest dist/ClipStack_latest_*.dmg dist/latest.json --clobber

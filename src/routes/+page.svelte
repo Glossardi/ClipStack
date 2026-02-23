@@ -3,7 +3,7 @@
     import { invoke } from "@tauri-apps/api/core";
     import { listen } from "@tauri-apps/api/event";
     import { getCurrentWindow } from "@tauri-apps/api/window";
-    import { checkForUpdatesOnStartup } from "$lib/updater.js";
+    import { checkForUpdatesOnStartup, checkForUpdatesOnFocus } from "$lib/updater.js";
     import {
         getRelativeTime,
         getTypeLabel,
@@ -49,6 +49,7 @@
 
         unlistenFocus = await listen("tauri://focus", async () => {
             await refreshItems();
+            void checkForUpdatesOnFocus();
         });
 
         window.addEventListener("keydown", handleKeydown);

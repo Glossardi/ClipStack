@@ -24,6 +24,9 @@
 let hasCheckedAtStartup = false;
 /** @type {Promise<UpdateFlowResult> | null} */
 let inFlightCheck = null;
+/** Timestamp of last successful update check (ms). 0 = never. */
+let lastCheckedAt = 0;
+const CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 
 /**
  * @param {UpdatePayload | null | undefined} update
@@ -88,7 +91,31 @@ export async function checkForUpdatesOnStartup(deps) {
   hasCheckedAtStartup = true;
   inFlightCheck = (async () => {
     const resolvedDeps = deps ?? (await resolveUpdaterDeps());
-    return runUpdateFlow(resolvedDeps);
+    const result = await runUpdateFlow(resolvedDeps);
+    lastCheckedAt = Date.now();
+    return result;
+  })().finally(() => {
+    inFlightCheck = null;
+  });
+
+  return inFlightCheck;
+}
+
+/**
+ * Check for updates on window focus, throttled to once per hour.
+ * Safe to call on every focus event.
+ * @param {UpdateDeps} [deps]
+ * @returns {Promise<StartupUpdateResult>}
+ */
+export async function checkForUpdatesOnFocus(deps) {
+  if (inFlightCheck) return inFlightCheck;
+  if (Date.now() - lastCheckedAt < CHECK_INTERVAL_MS) return "skipped";
+
+  inFlightCheck = (async () => {
+    const resolvedDeps = deps ?? (await resolveUpdaterDeps());
+    const result = await runUpdateFlow(resolvedDeps);
+    lastCheckedAt = Date.now();
+    return result;
   })().finally(() => {
     inFlightCheck = null;
   });
@@ -99,4 +126,5 @@ export async function checkForUpdatesOnStartup(deps) {
 export function _resetUpdaterStateForTests() {
   hasCheckedAtStartup = false;
   inFlightCheck = null;
+  lastCheckedAt = 0;
 }
