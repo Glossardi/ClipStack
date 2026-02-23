@@ -128,25 +128,39 @@
     .cta-caption { font-size: 12px; color: var(--text3); letter-spacing: .01em; }
     .cta-sub { font-size: 13px; color: var(--text2); text-decoration: none; }
     .cta-sub:hover { text-decoration: underline; }
-    .gk-box {
-      margin-top: 18px;
-      background: #fffbeb; border: 1px solid #f0d060;
-      border-radius: 10px; padding: 14px 18px;
-      max-width: 360px; text-align: left;
+    .help-link {
+      font-size: 12px; color: var(--text3); text-decoration: none;
+      display: inline-flex; align-items: center; gap: 4px; margin-top: 10px;
+      cursor: pointer; border: none; background: none; padding: 0;
+      font-family: inherit;
     }
-    .gk-box summary {
-      font-size: 12.5px; font-weight: 600; color: #92600a;
-      cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px;
+    .help-link:hover { color: var(--text2); }
+    .help-link svg { opacity: .6; }
+    /* Modal */
+    .modal-bg {
+      display: none; position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,.35); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
     }
-    .gk-box summary::-webkit-details-marker { display: none; }
-    .gk-box ol {
-      margin: 10px 0 0 0; padding-left: 18px;
-      font-size: 12px; color: #78500a; line-height: 1.8;
+    .modal-bg.open { display: flex; }
+    .modal {
+      background: #fff; border-radius: 16px; padding: 32px 28px 28px;
+      max-width: 380px; width: calc(100% - 40px);
+      box-shadow: 0 24px 60px rgba(0,0,0,.18);
+      position: relative; animation: modal-in .18s ease;
     }
-    .gk-box code {
-      background: #fef3c7; border-radius: 4px; padding: 1px 5px;
-      font-family: ui-monospace, monospace; font-size: 11px;
+    @keyframes modal-in { from { opacity:0; transform:scale(.96) translateY(6px) } to { opacity:1; transform:none } }
+    .modal h3 { font-size: 16px; font-weight: 700; margin: 0 0 6px; }
+    .modal p { font-size: 13px; color: var(--text2); line-height: 1.6; margin: 0 0 16px; }
+    .modal ol { padding-left: 20px; margin: 0 0 16px; font-size: 13px; color: var(--text2); line-height: 1.9; }
+    .modal ol li strong { color: var(--text1); }
+    .modal-close {
+      position: absolute; top: 14px; right: 16px;
+      background: #f0f0f0; border: none; border-radius: 50%;
+      width: 26px; height: 26px; cursor: pointer; font-size: 14px;
+      display: flex; align-items: center; justify-content: center; color: #555;
     }
+    .modal-close:hover { background: #e0e0e0; }
     .non-mac { display: none; gap: 14px; }
     .non-mac a { font-size: 13px; color: var(--text2); text-decoration: none; }
     .non-mac a:hover { text-decoration: underline; }
@@ -374,14 +388,26 @@
       <a class="cta-sub" id="btn-i" href="#" data-track="download-x64" data-i18n="intelHint" style="display:none">
         On an Intel Mac? Download here →
       </a>
-      <details class="gk-box" id="gk-box" open>
-        <summary id="gk-summary">macOS says "app is damaged"? Here's the fix.</summary>
-        <ol id="gk-steps">
-          <li>Open <strong>Terminal</strong> (search Spotlight for "Terminal")</li>
-          <li>Paste and run: <code>xattr -cr ~/Downloads/ClipStack.dmg</code></li>
-          <li>Open the DMG again — ClipStack will install normally</li>
-        </ol>
-      </details>
+      <button class="help-link" id="help-btn" aria-label="Trouble opening ClipStack?">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="6.5"/><path d="M8 11v-1"/><path d="M8 8.5c0-1.5 2-1.5 2-3a2 2 0 0 0-4 0"/></svg>
+        <span id="help-label">Can't open ClipStack?</span>
+      </button>
+
+      <!-- Help modal -->
+      <div class="modal-bg" id="modal-bg" role="dialog" aria-modal="true">
+        <div class="modal">
+          <button class="modal-close" id="modal-close" aria-label="Close">✕</button>
+          <h3 id="modal-title">Can't open ClipStack?</h3>
+          <p id="modal-intro">Because ClipStack is distributed outside the Mac App Store, macOS may warn that it's from an unidentified developer.</p>
+          <ol id="modal-steps">
+            <li>Open <strong>System Settings</strong></li>
+            <li>Go to <strong>Privacy &amp; Security</strong></li>
+            <li>Scroll down — click <strong>"Open Anyway"</strong> next to ClipStack</li>
+            <li>Confirm by clicking <strong>"Open"</strong> in the dialog</li>
+          </ol>
+          <p id="modal-note" style="margin:0;font-size:11.5px;color:var(--text3)">You only need to do this once. ClipStack is safe and open source.</p>
+        </div>
+      </div>
       <div class="non-mac" id="non-mac">
         <a href="#" id="nm-arm"   data-track="download-arm64" data-i18n="dlArm">Apple Silicon</a>
         <a href="#" id="nm-intel" data-track="download-x64"   data-i18n="dlIntel">Intel Mac</a>
@@ -541,10 +567,14 @@
       dlIntel:   "Intel Mac",
       intelHint: "On an Intel Mac? Download here \u2192",
       caption:   "macOS 13 or later \u00b7 Free \u00b7 No account needed",
-      gkSummary: "macOS says \u201capp is damaged\u201d? Here\u2019s the fix.",
-      gkStep1: "Open <strong>Terminal</strong> (search Spotlight for \u201cTerminal\u201d)",
-      gkStep2: "Paste and run: <code>xattr -cr ~/Downloads/ClipStack.dmg</code>",
-      gkStep3: "Open the DMG again \u2014 ClipStack will install normally",
+      gkLabel:  "Can\u2019t open ClipStack?",
+      gkTitle:  "Can\u2019t open ClipStack?",
+      gkIntro:  "Because ClipStack is distributed outside the Mac App Store, macOS may warn it\u2019s from an unidentified developer.",
+      gkStep1:  "Open <strong>System Settings</strong>",
+      gkStep2:  "Go to <strong>Privacy &amp; Security</strong>",
+      gkStep3:  "Scroll down \u2014 click <strong>\u201cOpen Anyway\u201d</strong> next to ClipStack",
+      gkStep4:  "Confirm by clicking <strong>\u201cOpen\u201d</strong> in the dialog",
+      gkNote:   "You only need to do this once. ClipStack is safe and open source.",
       featTitle: "Built for calm productivity.",
       f1h: "Instant recall",       f1p: "One click or shortcut from the menu bar \u2014 every copy you\u2019ve ever made, instantly accessible.",
       f2h: "Private by default",   f2p: "All clipboard data stays on your Mac. No cloud, no account, no tracking of any kind.",
@@ -562,10 +592,14 @@
       dlIntel:   "Intel Mac",
       intelHint: "Intel Mac? Hier herunterladen \u2192",
       caption:   "macOS 13 oder neuer \u00b7 Kostenlos \u00b7 Kein Account n\u00f6tig",
-      gkSummary: "macOS zeigt \u201eBeschädigt\u201c? So behebst du es.",
-      gkStep1: "<strong>Terminal</strong> öffnen (Spotlight: \u201eTerminal\u201c)",
-      gkStep2: "Diesen Befehl ausführen: <code>xattr -cr ~/Downloads/ClipStack.dmg</code>",
-      gkStep3: "DMG erneut öffnen \u2014 ClipStack installiert sich normal",
+      gkLabel:  "ClipStack l\u00e4sst sich nicht \u00f6ffnen?",
+      gkTitle:  "ClipStack l\u00e4sst sich nicht \u00f6ffnen?",
+      gkIntro:  "Da ClipStack au\u00dferhalb des Mac App Store verteilt wird, kann macOS warnen, dass die App von einem unbekannten Entwickler stammt.",
+      gkStep1:  "<strong>Systemeinstellungen</strong> \u00f6ffnen",
+      gkStep2:  "<strong>Datenschutz &amp; Sicherheit</strong> w\u00e4hlen",
+      gkStep3:  "Nach unten scrollen \u2014 <strong>\u201eTrotzdem \u00f6ffnen\u201c</strong> neben ClipStack klicken",
+      gkStep4:  "Im Dialog <strong>\u201e\u00d6ffnen\u201c</strong> best\u00e4tigen",
+      gkNote:   "Das musst du nur einmal tun. ClipStack ist sicher und Open Source.",
       featTitle: "F\u00fcr ruhige Produktivit\u00e4t gebaut.",
       f1h: "Sofortiger Zugriff",   f1p: "Ein Klick oder Shortcut aus der Men\u00fcleiste \u2014 alles was du je kopiert hast, sofort griffbereit.",
       f2h: "Privat by default",    f2p: "Alle Daten bleiben auf deinem Mac. Keine Cloud, kein Account, kein Tracking.",
@@ -602,12 +636,14 @@
       if (t[k] != null) el.innerHTML = t[k];
     });
     if (btnP) btnP.setAttribute("aria-label", t.aria);
-    // Update Gatekeeper box
-    const gkSum = document.getElementById("gk-summary");
-    const gkSteps = document.getElementById("gk-steps");
-    if (gkSum && t.gkSummary) gkSum.innerHTML = t.gkSummary;
-    if (gkSteps && t.gkStep1) gkSteps.innerHTML =
-      `<li>${t.gkStep1}</li><li>${t.gkStep2}</li><li>${t.gkStep3}</li>`;
+    // Update help modal text
+    const el = (id) => document.getElementById(id);
+    if (el("help-label"))   el("help-label").textContent  = t.gkLabel;
+    if (el("modal-title"))  el("modal-title").textContent = t.gkTitle;
+    if (el("modal-intro"))  el("modal-intro").textContent = t.gkIntro;
+    if (el("modal-steps"))  el("modal-steps").innerHTML   =
+      `<li>${t.gkStep1}</li><li>${t.gkStep2}</li><li>${t.gkStep3}</li><li>${t.gkStep4}</li>`;
+    if (el("modal-note"))   el("modal-note").textContent  = t.gkNote;
   }
 
   /* Fetch real release asset URLs from GitHub API */
@@ -641,9 +677,9 @@
       if (btnP)  btnP.style.display  = "none";
       if (capEl) capEl.style.display = "none";
       if (nonMac) nonMac.style.display = "flex";
-      // Hide Gatekeeper box on non-Mac (irrelevant)
-      const gkBox = document.getElementById("gk-box");
-      if (gkBox) gkBox.style.display = "none";
+      // Hide help link on non-Mac (irrelevant)
+      const helpBtn = document.getElementById("help-btn");
+      if (helpBtn) helpBtn.style.display = "none";
       return;
     }
 
@@ -683,6 +719,20 @@
     document.querySelectorAll(".up").forEach(el => obs.observe(el));
   }
 
+  /* Help modal open / close */
+  function setupModal() {
+    const bg    = document.getElementById("modal-bg");
+    const btn   = document.getElementById("help-btn");
+    const close = document.getElementById("modal-close");
+    if (!bg || !btn) return;
+    const open  = () => { bg.classList.add("open"); close?.focus(); };
+    const shut  = () => bg.classList.remove("open");
+    btn.addEventListener("click", open);
+    close?.addEventListener("click", shut);
+    bg.addEventListener("click", e => { if (e.target === bg) shut(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") shut(); });
+  }
+
   /* Impressum email — injected via JS so it can't be crawled */
   function injectEmail() {
     const el = document.getElementById("impr-email");
@@ -711,6 +761,7 @@
     setupDownloads();
     setupTracking();
     setupAnimations();
+    setupModal();
     injectEmail();
   })();
 </script>
