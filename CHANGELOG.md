@@ -6,6 +6,14 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+## [1.1.5] - 2026-02-23
+
+### Fixed
+- **Auto-updater was never triggered** — the `latest.json` file (required by the Tauri updater) was not uploaded to the `latest` GitHub release tag. The updater endpoint returned 404 for all existing installs. Fixed `publish_latest` CI job to also upload `latest.json` alongside the DMGs.
+
+### Changed
+- **Update check on every popover open** — previously the app only checked for updates once at startup. Now `checkForUpdatesOnFocus()` checks on every `tauri://focus` event (when the menu bar popover opens), throttled to at most once per hour. Users on long-running sessions will now receive updates without restarting.
+
 ## [1.1.4] - 2026-02-23
 
 ### Fixed
