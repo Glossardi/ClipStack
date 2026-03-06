@@ -59,7 +59,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22
           cache: npm
           cache-dependency-path: package-lock.json
 
@@ -115,7 +115,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22
           cache: npm
           cache-dependency-path: package-lock.json
 
@@ -140,15 +140,14 @@ jobs:
           APPLE_PASSWORD_INPUT: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID_INPUT: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          # Defaults: ad-hoc signing, notarization disabled.
-          # Overridden below only when a valid Developer ID cert is found.
+          # Default: ad-hoc signing (no notarization).
+          # APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID are intentionally NOT
+          # written to GITHUB_ENV unless we have a working Developer ID cert.
+          # This prevents Tauri from attempting notarization with empty values.
           echo "APPLE_SIGNING_IDENTITY=-" >> "$GITHUB_ENV"
-          echo "APPLE_ID=" >> "$GITHUB_ENV"
-          echo "APPLE_PASSWORD=" >> "$GITHUB_ENV"
-          echo "APPLE_TEAM_ID=" >> "$GITHUB_ENV"
 
           if [[ -z "$APPLE_CERTIFICATE" ]]; then
-            echo "No APPLE_CERTIFICATE secret — using ad-hoc signing, skipping notarization."
+            echo "No APPLE_CERTIFICATE — ad-hoc signing, no notarization."
             exit 0
           fi
 
@@ -162,28 +161,28 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
           rm /tmp/certificate.p12
 
-          echo "Identities available in keychain:"
+          echo "Identities in keychain:"
           security find-identity -v -p codesigning build.keychain
 
           if security find-identity -v -p codesigning build.keychain | grep -qF "$APPLE_SIGNING_IDENTITY_INPUT"; then
-            echo "Identity '$APPLE_SIGNING_IDENTITY_INPUT' found — using Developer ID signing + notarization."
+            echo "Developer ID identity found — signing + notarization enabled."
             echo "APPLE_SIGNING_IDENTITY=${APPLE_SIGNING_IDENTITY_INPUT}" >> "$GITHUB_ENV"
             echo "APPLE_ID=${APPLE_ID_INPUT}" >> "$GITHUB_ENV"
             echo "APPLE_PASSWORD=${APPLE_PASSWORD_INPUT}" >> "$GITHUB_ENV"
             echo "APPLE_TEAM_ID=${APPLE_TEAM_ID_INPUT}" >> "$GITHUB_ENV"
           else
-            echo "WARNING: Identity '$APPLE_SIGNING_IDENTITY_INPUT' NOT found — ad-hoc signing, notarization skipped."
+            echo "WARNING: Identity not found — ad-hoc signing, no notarization."
           fi
 
+      # APPLE_SIGNING_IDENTITY, APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID
+      # come from GITHUB_ENV (set by the step above). When the Developer ID
+      # cert is missing or invalid, only APPLE_SIGNING_IDENTITY=- is set
+      # and Tauri skips notarization entirely.
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ env.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ env.APPLE_ID }}
-          APPLE_PASSWORD: ${{ env.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ env.APPLE_TEAM_ID }}
         with:
           tagName: v__VERSION__
           releaseName: v__VERSION__
