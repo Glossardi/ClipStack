@@ -1,6 +1,6 @@
 {
   "name": "clipstack",
-  "version": "1.1.6",
+  "version": "1.2.0",
   "description": "A minimalist macOS clipboard manager",
   "type": "module",
   "scripts": {
@@ -20,6 +20,7 @@
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
     "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-autostart": "^2",
     "@tauri-apps/plugin-process": "^2",
     "@tauri-apps/plugin-updater": "^2"
   },

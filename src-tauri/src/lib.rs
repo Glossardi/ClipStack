@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::{
-    menu::{Menu, MenuItem},
+    menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     AppHandle, Emitter, Manager, State, WindowEvent,
 };
@@ -189,12 +189,42 @@ pub struct ClipItem {
     pub created_at: u64,
 }
 
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct Settings {
+    #[serde(default)]
+    pub autostart: bool,
+}
+
+fn load_settings_from_path(path: &Path) -> Settings {
+    if !path.exists() {
+        return Settings::default();
+    }
+    match fs::read(path) {
+        Ok(raw) if !raw.is_empty() => {
+            serde_json::from_slice::<Settings>(&raw).unwrap_or_default()
+        }
+        _ => Settings::default(),
+    }
+}
+
+fn save_settings_to_path(path: &Path, settings: &Settings) -> Result<(), String> {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    let payload = serde_json::to_vec_pretty(settings).map_err(|e| e.to_string())?;
+    let temp_path = path.with_extension("tmp");
+    fs::write(&temp_path, payload).map_err(|e| e.to_string())?;
+    fs::rename(&temp_path, path).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 #[derive(Clone)]
 struct ClipboardState {
     items: Arc<Mutex<Vec<ClipItem>>>,
     history_limit: Arc<Mutex<usize>>,
     last_seen: Arc<Mutex<Option<String>>>,
     storage_path: Arc<Mutex<Option<PathBuf>>>,
+    settings_path: Arc<Mutex<Option<PathBuf>>>,
 }
 
 impl ClipboardState {
@@ -204,6 +234,7 @@ impl ClipboardState {
             history_limit: Arc::new(Mutex::new(50)),
             last_seen: Arc::new(Mutex::new(None)),
             storage_path: Arc::new(Mutex::new(None)),
+            settings_path: Arc::new(Mutex::new(None)),
         }
     }
 }
@@ -486,6 +517,66 @@ mod tests {
         assert!(upsert_clip_item(&state, "   ".to_string()).is_none());
         assert!(state.items.lock().unwrap().is_empty());
     }
+
+    #[test]
+    fn settings_default_has_autostart_false() {
+        let settings = Settings::default();
+        assert!(!settings.autostart);
+    }
+
+    #[test]
+    fn settings_round_trip_to_file() {
+        let dir = std::env::temp_dir().join(format!("clipstack_test_{}", uuid::Uuid::new_v4()));
+        let path = dir.join("settings.json");
+
+        let settings = Settings { autostart: true };
+        save_settings_to_path(&path, &settings).unwrap();
+
+        let loaded = load_settings_from_path(&path);
+        assert!(loaded.autostart);
+
+        let settings2 = Settings { autostart: false };
+        save_settings_to_path(&path, &settings2).unwrap();
+        let loaded2 = load_settings_from_path(&path);
+        assert!(!loaded2.autostart);
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn settings_load_returns_default_for_missing_file() {
+        let path = std::env::temp_dir()
+            .join(format!("clipstack_test_{}", uuid::Uuid::new_v4()))
+            .join("nonexistent.json");
+        let settings = load_settings_from_path(&path);
+        assert!(!settings.autostart);
+    }
+
+    #[test]
+    fn settings_load_returns_default_for_invalid_json() {
+        let dir = std::env::temp_dir().join(format!("clipstack_test_{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("settings.json");
+        fs::write(&path, b"not valid json{{{").unwrap();
+
+        let settings = load_settings_from_path(&path);
+        assert!(!settings.autostart);
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn settings_load_handles_extra_fields_gracefully() {
+        let dir = std::env::temp_dir().join(format!("clipstack_test_{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("settings.json");
+        fs::write(&path, br#"{"autostart": true, "future_field": 42}"#).unwrap();
+
+        let settings = load_settings_from_path(&path);
+        assert!(settings.autostart);
+
+        let _ = fs::remove_dir_all(&dir);
+    }
 }
 
 pub fn run() {
@@ -494,6 +585,10 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
         .manage(clipboard_state.clone())
         .invoke_handler(tauri::generate_handler![
             get_clipboard_items,
@@ -511,6 +606,26 @@ pub fn run() {
                 .map_err(|e| e.to_string())?
                 .join("clipboard_history.json");
             set_storage_path(&clipboard_state, storage_path.clone());
+
+            let settings_path = app
+                .path()
+                .app_data_dir()
+                .map_err(|e| e.to_string())?
+                .join("settings.json");
+            *clipboard_state.settings_path.lock().unwrap() = Some(settings_path.clone());
+
+            // Sync autostart plugin state with persisted settings
+            let settings = load_settings_from_path(&settings_path);
+            {
+                use tauri_plugin_autostart::ManagerExt;
+                let autostart_manager = app.autolaunch();
+                let currently_enabled = autostart_manager.is_enabled().unwrap_or(false);
+                if settings.autostart && !currently_enabled {
+                    let _ = autostart_manager.enable();
+                } else if !settings.autostart && currently_enabled {
+                    let _ = autostart_manager.disable();
+                }
+            }
 
             match load_items_from_path(&storage_path) {
                 Ok(items) => {
@@ -547,7 +662,21 @@ pub fn run() {
                 true,
                 None::<&str>,
             )?;
-            let menu = Menu::with_items(app, &[&clear, &quit])?;
+            let separator = PredefinedMenuItem::separator(app)?;
+
+            let initial_autostart = {
+                let sp = clipboard_state.settings_path.lock().unwrap().clone();
+                sp.map(|p| load_settings_from_path(&p).autostart).unwrap_or(false)
+            };
+            let autostart_toggle = CheckMenuItem::with_id(
+                app,
+                "toggle_autostart",
+                "Start at Login",
+                true,
+                initial_autostart,
+                None::<&str>,
+            )?;
+            let menu = Menu::with_items(app, &[&clear, &separator, &autostart_toggle, &quit])?;
 
             if let Some(window) = app.get_webview_window("main") {
                 if let Err(err) = window.hide() {
@@ -634,21 +763,54 @@ pub fn run() {
                 }
             }
 
+            let autostart_toggle_ref = autostart_toggle.clone();
+
             let _tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
                 .icon_as_template(true)
                 .menu(&menu)
                 .show_menu_on_left_click(false)
-                .on_menu_event(|app, event| match event.id.as_ref() {
-                    "quit" => app.exit(0),
-                    "clear_history" => {
-                        let state = app.state::<ClipboardState>();
-                        match clear_items(state.inner()) {
-                            Ok(()) => emit_clipboard_updated(app),
-                            Err(err) => eprintln!("failed to clear clipboard history: {err}"),
+                .on_menu_event({
+                    let autostart_item = autostart_toggle_ref;
+                    move |app, event| match event.id.as_ref() {
+                        "quit" => app.exit(0),
+                        "clear_history" => {
+                            let state = app.state::<ClipboardState>();
+                            match clear_items(state.inner()) {
+                                Ok(()) => emit_clipboard_updated(app),
+                                Err(err) => {
+                                    eprintln!("failed to clear clipboard history: {err}")
+                                }
+                            }
                         }
+                        "toggle_autostart" => {
+                            let new_checked = autostart_item.is_checked().unwrap_or(false);
+
+                            {
+                                use tauri_plugin_autostart::ManagerExt;
+                                let manager = app.autolaunch();
+                                if new_checked {
+                                    if let Err(err) = manager.enable() {
+                                        eprintln!("failed to enable autostart: {err}");
+                                    }
+                                } else if let Err(err) = manager.disable() {
+                                    eprintln!("failed to disable autostart: {err}");
+                                }
+                            }
+
+                            let state = app.state::<ClipboardState>();
+                            let settings_path =
+                                state.settings_path.lock().unwrap().clone();
+                            if let Some(path) = settings_path {
+                                let mut settings = load_settings_from_path(&path);
+                                settings.autostart = new_checked;
+                                if let Err(err) = save_settings_to_path(&path, &settings) {
+                                    eprintln!("failed to save settings: {err}");
+                                }
+                            }
+                        }
+                        _ => {}
                     }
-                    _ => {}
                 })
                 .on_tray_icon_event(move |_tray, event| {
                     if let TrayIconEvent::Click {

@@ -4,6 +4,15 @@ All notable changes to ClipStack are documented here.
 
 The format is based on Keep a Changelog and this project follows Semantic Versioning.
 
+## [1.2.0] - 2026-03-06
+
+### Added
+- **Start at Login** — ClipStack can now launch automatically at login. Toggle via the right-click tray menu ("Start at Login" checkmark). Preference persists across restarts.
+- **Settings persistence** — new `settings.json` in app data directory stores user preferences.
+
+### Changed
+- Tray right-click menu now shows: Clear Clipboard History | separator | Start at Login (checkmark) | Quit ClipStack.
+
 ## [1.1.6] - 2026-02-23
 
 ### Changed
