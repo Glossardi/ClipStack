@@ -135,13 +135,20 @@ jobs:
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_SIGNING_IDENTITY_INPUT: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID_INPUT: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD_INPUT: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID_INPUT: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          # Default to ad-hoc signing; overridden below if a valid cert is found.
+          # Defaults: ad-hoc signing, notarization disabled.
+          # Overridden below only when a valid Developer ID cert is found.
           echo "APPLE_SIGNING_IDENTITY=-" >> "$GITHUB_ENV"
+          echo "APPLE_ID=" >> "$GITHUB_ENV"
+          echo "APPLE_PASSWORD=" >> "$GITHUB_ENV"
+          echo "APPLE_TEAM_ID=" >> "$GITHUB_ENV"
 
           if [[ -z "$APPLE_CERTIFICATE" ]]; then
-            echo "No APPLE_CERTIFICATE secret — using ad-hoc signing."
+            echo "No APPLE_CERTIFICATE secret — using ad-hoc signing, skipping notarization."
             exit 0
           fi
 
@@ -158,11 +165,14 @@ jobs:
           echo "Identities available in keychain:"
           security find-identity -v -p codesigning build.keychain
 
-          if security find-identity -v -p codesigning build.keychain | grep -qF "$APPLE_SIGNING_IDENTITY"; then
-            echo "Identity '$APPLE_SIGNING_IDENTITY' found — will use Developer ID signing."
-            echo "APPLE_SIGNING_IDENTITY=${APPLE_SIGNING_IDENTITY}" >> "$GITHUB_ENV"
+          if security find-identity -v -p codesigning build.keychain | grep -qF "$APPLE_SIGNING_IDENTITY_INPUT"; then
+            echo "Identity '$APPLE_SIGNING_IDENTITY_INPUT' found — using Developer ID signing + notarization."
+            echo "APPLE_SIGNING_IDENTITY=${APPLE_SIGNING_IDENTITY_INPUT}" >> "$GITHUB_ENV"
+            echo "APPLE_ID=${APPLE_ID_INPUT}" >> "$GITHUB_ENV"
+            echo "APPLE_PASSWORD=${APPLE_PASSWORD_INPUT}" >> "$GITHUB_ENV"
+            echo "APPLE_TEAM_ID=${APPLE_TEAM_ID_INPUT}" >> "$GITHUB_ENV"
           else
-            echo "WARNING: Identity '$APPLE_SIGNING_IDENTITY' NOT found — falling back to ad-hoc signing."
+            echo "WARNING: Identity '$APPLE_SIGNING_IDENTITY_INPUT' NOT found — ad-hoc signing, notarization skipped."
           fi
 
       - uses: tauri-apps/tauri-action@v0
@@ -171,9 +181,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           APPLE_SIGNING_IDENTITY: ${{ env.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_ID: ${{ env.APPLE_ID }}
+          APPLE_PASSWORD: ${{ env.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ env.APPLE_TEAM_ID }}
         with:
           tagName: v__VERSION__
           releaseName: v__VERSION__
