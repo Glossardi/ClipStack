@@ -137,8 +137,11 @@ jobs:
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: |
+          # Default to ad-hoc signing; overridden below if a valid cert is found.
+          echo "APPLE_SIGNING_IDENTITY=-" >> "$GITHUB_ENV"
+
           if [[ -z "$APPLE_CERTIFICATE" ]]; then
-            echo "No APPLE_CERTIFICATE — using ad-hoc signing."
+            echo "No APPLE_CERTIFICATE secret — using ad-hoc signing."
             exit 0
           fi
 
@@ -156,11 +159,10 @@ jobs:
           security find-identity -v -p codesigning build.keychain
 
           if security find-identity -v -p codesigning build.keychain | grep -qF "$APPLE_SIGNING_IDENTITY"; then
-            echo "Identity '$APPLE_SIGNING_IDENTITY' found — will use for signing."
+            echo "Identity '$APPLE_SIGNING_IDENTITY' found — will use Developer ID signing."
+            echo "APPLE_SIGNING_IDENTITY=${APPLE_SIGNING_IDENTITY}" >> "$GITHUB_ENV"
           else
-            echo "WARNING: Identity '$APPLE_SIGNING_IDENTITY' NOT found in keychain."
-            echo "Available identities listed above. Falling back to ad-hoc signing."
-            echo "APPLE_SIGNING_IDENTITY=-" >> "$GITHUB_ENV"
+            echo "WARNING: Identity '$APPLE_SIGNING_IDENTITY' NOT found — falling back to ad-hoc signing."
           fi
 
       - uses: tauri-apps/tauri-action@v0
@@ -168,7 +170,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY || '-' }}
+          APPLE_SIGNING_IDENTITY: ${{ env.APPLE_SIGNING_IDENTITY }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
